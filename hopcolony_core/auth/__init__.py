@@ -7,19 +7,21 @@ from .auth_token import *
 import requests, re, uuid
 from datetime import datetime
 
-def client(app = None):
-    if not app:
-        app = hopcolony_core.get_app()
+def client(project = None):
+    if not project:
+        project = hopcolony_core.get_project()
+    if not project:
+        raise hopcolony_core.ConfigNotFound("Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.")
     
-    return HopAuth(app)
+    return HopAuth(project)
 
 class DuplicatedEmail(Exception):
     pass
 
 class HopAuth:
-    def __init__(self, app):
-        self.app = app
-        self._docs = docs.HopDoc(app)
+    def __init__(self, project):
+        self.project = project
+        self._docs = docs.HopDoc(project)
     
     def close(self):
         self._docs.close()

@@ -5,15 +5,17 @@ from .utils import *
 
 import requests, yaml
 
-def client(app = None):
-    if not app:
-        app = hopcolony_core.get_app()
+def client(project = None):
+    if not project:
+        project = hopcolony_core.get_project()
+    if not project:
+        raise hopcolony_core.ConfigNotFound("Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.")
     
-    return HopJobs(app)
+    return HopJobs(project)
 
 class HopJobs:
-    def __init__(self, app):
-        self.app = app
+    def __init__(self, project):
+        self.project = project
     
     def run(self, job, pipelines = []):
         self.engine = Engine(job, pipelines)

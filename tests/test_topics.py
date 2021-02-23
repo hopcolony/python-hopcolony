@@ -5,8 +5,8 @@ from hopcolony_core import topics
 import time, json
 
 class TestTopics(unittest.TestCase):
-    app_name = "core"
-    project_name = "hop-core"
+    user_name = "console@hopcolony.io"
+    project_name = "console"
     token_name = "supersecret"
 
     topic = "test-topic"
@@ -14,18 +14,18 @@ class TestTopics(unittest.TestCase):
     data_json = {"data": "Testing Hop Topics!"}
 
     def setUp(self):
-        self.app = hopcolony_core.initialize(app = self.app_name, project = self.project_name, 
+        self.project = hopcolony_core.initialize(username = self.user_name, project = self.project_name, 
                                              token = self.token_name)
     
     def test_a_initialize(self):
-        self.assertNotEqual(self.app.config, None)
-        self.assertEqual(self.app.name, self.app_name)
+        self.assertNotEqual(self.project.config, None)
+        self.assertEqual(self.project.name, self.project_name)
 
         self.conn = topics.connection()
-        self.assertEqual(self.conn.app.name, self.app.name)
+        self.assertEqual(self.conn.project.name, self.project.name)
         self.assertEqual(self.conn.host, "topics.hopcolony.io")
-        self.assertEqual(self.conn.credentials.username, self.app.config.identity)
-        self.assertEqual(self.conn.credentials.password, self.app.config.token)
+        self.assertEqual(self.conn.credentials.username, self.project.config.identity)
+        self.assertEqual(self.conn.credentials.password, self.project.config.token)
 
     def test_c_subscriber_publisher_string(self):
         self.conn = topics.connection()

@@ -4,16 +4,18 @@ from .docs_document import *
 
 import requests, re
 
-def client(app = None):
-    if not app:
-        app = hopcolony_core.get_app()
-    
-    return HopDoc(app)
+def client(project = None):
+    if not project:
+        project = hopcolony_core.get_project()
+    if not project:
+        raise hopcolony_core.ConfigNotFound("Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.")
+
+    return HopDoc(project)
 
 class HopDoc:
-    def __init__(self, app):
-        self.app = app
-        self.client = HopDocClient(app)
+    def __init__(self, project):
+        self.project = project
+        self.client = HopDocClient(project)
     
     def close(self):
         self.client.close()
@@ -39,11 +41,11 @@ class HopDoc:
         return indices
 
 class HopDocClient:
-    def __init__(self, app):
-        self.app = app
+    def __init__(self, project):
+        self.project = project
         self.host = "docs.hopcolony.io"
         self.port = 443
-        self.identity = app.config.identity
+        self.identity = project.config.identity
         self._session = requests.Session()
         self._base_url = f"https://{self.host}:{self.port}/{self.identity}/http"
     

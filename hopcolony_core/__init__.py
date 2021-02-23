@@ -1,7 +1,7 @@
 import os, json, base64, yaml
 from pathlib import Path
 
-_app = None
+_project = None
 
 class ConfigNotFound(Exception):
     pass
@@ -12,7 +12,7 @@ class InvalidConfig(Exception):
 class HopConfig:
     hop_dir = str(Path.home()) + "/.hop"
     hop_file = os.path.join(hop_dir, "config")
-    app = None
+    username = None
     project = None
     token = None
     identity = None
@@ -22,15 +22,16 @@ class HopConfig:
         self.identity = self.compute_identity()
 
     def compute_identity(self):
-        if not self.app or not self.project:
+        if not self.username or not self.project:
             return None
-        raw = str(self.project) + "." + str(self.app)
+        username_encoded = 'a'+base64.b64encode(self.username.encode('ascii')).decode('ascii').lower().replace("=","a")
+        raw = str(username_encoded) + "." + str(self.project)
         message_bytes = raw.encode('ascii')
         return base64.b64encode(message_bytes).decode('ascii')
     
     @property
     def valid(self):
-        return self.app and self.project and self.token and self.identity
+        return self.username and self.project and self.token and self.identity
     
     @classmethod
     def update(cls, **kwargs):
@@ -55,7 +56,7 @@ class HopConfig:
 
     @property
     def json(self):
-        return {"app": self.app,
+        return {"username": self.username,
                 "project": self.project,
                 "token": self.token}
 
@@ -69,17 +70,17 @@ class HopConfig:
             f.write(self.yaml)
         return self.json
 
-class App:
-    def __init__(self, app = None, project = None, token = None, 
+class Project:
+    def __init__(self, username = None, project = None, token = None, 
                  config_file = ".hop.config"):
 
-        # Use app, project and token values if the 3 provided
-        if any([app, project, token]):
-            if all([app, project, token]):
-                self.config = HopConfig(app = app, project = project, token = token)
+        # Use username, project and token values if the 3 provided
+        if any([username, project, token]):
+            if all([username, project, token]):
+                self.config = HopConfig(username = username, project = project, token = token)
                 return
             else:
-                raise InvalidConfig("If you provide one of [app, project, token], you need to provide the 3 of them")
+                raise InvalidConfig("If you provide one of [username, project, token], you need to provide the 3 of them")
 
         # Else, use the provided config_file if provided. If not, try ~/.hop/config
         try:
@@ -89,25 +90,23 @@ class App:
                 try:
                     self.config = HopConfig.fromFile(HopConfig.hop_file)
                 except FileNotFoundError:
-                    raise ConfigNotFound(f"Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.")
+                    raise ConfigNotFound("Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.")
             else:
-                raise ConfigNotFound(f"Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.")
+                raise ConfigNotFound("Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.")
         except IsADirectoryError:
             raise ConfigNotFound(f"Config file provided [{config_file}] is a directory")
     
     @property
     def name(self):
-        return self.config.app
+        return self.config.project
 
 def initialize(**kwargs):
-    global _app
-    _app = App(**kwargs)
-    return _app
+    global _project
+    _project = Project(**kwargs)
+    return _project
 
-def get_app():
-    assert _app, "You need to initialize the app first with hopcolony_core.initialize()"
-    return _app
+def get_project():
+    return _project
 
 def config():
-    app = get_app()
-    return app.config
+    return _project.config if _project else None 

@@ -9,7 +9,11 @@ app = typer.Typer()
 
 @app.command()
 def user(uuid: str):
-    client = auth.client()
+    try:
+        client = auth.client()
+    except hopcolony_core.ConfigNotFound as e:
+        typer.secho(str(e), err=True, fg = typer.colors.RED)
+        raise typer.Exit(code=1)
     snapshot = client.user(uuid).get()
     if snapshot.success:
         typer.echo(yaml.dump(snapshot.doc.source))
@@ -18,7 +22,11 @@ def user(uuid: str):
 
 @app.command()
 def index(name: str, cols: str = None, doc: Optional[str] = None):
-    client = docs.client()
+    try:
+        client = docs.client()
+    except hopcolony_core.ConfigNotFound as e:
+        typer.secho(str(e), err=True, fg = typer.colors.RED)
+        raise typer.Exit(code=1)
     if not doc:
         # Print all the documents in the index
         snapshot = client.index(name).get()
@@ -38,7 +46,11 @@ def index(name: str, cols: str = None, doc: Optional[str] = None):
 
 @app.command()
 def bucket(name: str, obj: Optional[str] = None):
-    client = drive.client()
+    try:
+        client = drive.client()
+    except hopcolony_core.ConfigNotFound as e:
+        typer.secho(str(e), err=True, fg = typer.colors.RED)
+        raise typer.Exit(code=1)
     if not obj:
         # Print all the objects in the bucket
         snapshot = client.bucket(name).get()
@@ -61,7 +73,11 @@ def bucket(name: str, obj: Optional[str] = None):
 
 @app.command()
 def doc(uuid: str):
-    client = docs.client()
+    try:
+        client = docs.client()
+    except hopcolony_core.ConfigNotFound as e:
+        typer.secho(str(e), err=True, fg = typer.colors.RED)
+        raise typer.Exit(code=1)
     snapshot = client.index(name).document(uuid).get()
     if snapshot.success:
         typer.echo(yaml.dump(snapshot.doc.source))

@@ -4,15 +4,15 @@ import hopcolony_core
 from hopcolony_core import drive
 
 class TestDrive(unittest.TestCase):
-    app_name = "core"
-    project_name = "hop-core"
+    user_name = "console@hopcolony.io"
+    project_name = "console"
     token_name = "supersecret"
 
     bucket = "hop-test"
     obj = "test"
 
     def setUp(self):
-        self.app = hopcolony_core.initialize(app = self.app_name, project = self.project_name, 
+        self.project = hopcolony_core.initialize(username = self.user_name, project = self.project_name, 
                                              token = self.token_name)
         self.db = drive.client()
         self.img = drive.load_image(os.path.join(os.path.dirname(__file__), "resources", self.obj))
@@ -21,12 +21,12 @@ class TestDrive(unittest.TestCase):
         self.db.close()
 
     def test_a_initialize(self):
-        self.assertNotEqual(self.app.config, None)
-        self.assertEqual(self.app.name, self.app_name)
+        self.assertNotEqual(self.project.config, None)
+        self.assertEqual(self.project.name, self.project_name)
 
-        self.assertEqual(self.db.app.name, self.app.name)
+        self.assertEqual(self.db.project.name, self.project.name)
         self.assertEqual(self.db.client.host, "drive.hopcolony.io")
-        self.assertEqual(self.db.client.identity, self.app.config.identity)
+        self.assertEqual(self.db.client.identity, self.project.config.identity)
     
     def test_b_load_image(self):
         with self.assertRaises(FileNotFoundError):

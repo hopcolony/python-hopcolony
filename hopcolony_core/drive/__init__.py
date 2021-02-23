@@ -6,11 +6,13 @@ from .drive_object import *
 from bs4 import BeautifulSoup
 from datetime import datetime
 
-def client(app = None):
-    if not app:
-        app = hopcolony_core.get_app()
+def client(project = None):
+    if not project:
+        project = hopcolony_core.get_project()
+    if not project:
+        raise hopcolony_core.ConfigNotFound("Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.")
     
-    return HopDrive(app)
+    return HopDrive(project)
 
 def load_image(path):
     with open(path, "rb") as image:
@@ -18,9 +20,9 @@ def load_image(path):
         return bytearray(f)
 
 class HopDrive:
-    def __init__(self, app):
-        self.app = app
-        self.client = HopDriveClient(app)
+    def __init__(self, project):
+        self.project = project
+        self.client = HopDriveClient(project)
     
     def close(self):
         self.client.close()
@@ -47,14 +49,14 @@ class HopDrive:
         return buckets
         
 class HopDriveClient:
-    def __init__(self, app):
-        self.app = app
+    def __init__(self, project):
+        self.project = project
         self.host = "drive.hopcolony.io"
         self.port = 443
-        self.identity = app.config.identity
+        self.identity = project.config.identity
         self._session = requests.Session()
         self.base_url = f"https://{self.host}:{self.port}/{self.identity}"
-        self.signer = drive_signer.Signer(self.host, app.config.app, app.config.token)
+        self.signer = drive_signer.Signer(self.host, project.config.project, project.config.token)
     
     def close(self):
         self._session.close()

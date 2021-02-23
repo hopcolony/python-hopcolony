@@ -4,8 +4,8 @@ import hopcolony_core
 from hopcolony_core import auth
 
 class TestAuth(unittest.TestCase):
-    app_name = "core"
-    project_name = "hop-core"
+    user_name = "console@hopcolony.io"
+    project_name = "console"
     token_name = "supersecret"
 
     email = "lpaarup@hopcolony.io"
@@ -13,7 +13,7 @@ class TestAuth(unittest.TestCase):
     uid = "faad1898-1796-55ca-aa3d-5eec87f8655e"
 
     def setUp(self):
-        self.app = hopcolony_core.initialize(app = self.app_name, project = self.project_name, 
+        self.project = hopcolony_core.initialize(username = self.user_name, project = self.project_name, 
                                              token = self.token_name)
         self.db = auth.client()
     
@@ -21,9 +21,9 @@ class TestAuth(unittest.TestCase):
         self.db.close()
 
     def test_a_initialize(self):
-        self.assertNotEqual(self.app.config, None)
-        self.assertEqual(self.app.name, self.app_name)
-        self.assertEqual(self.db.app.name, self.app.name)
+        self.assertNotEqual(self.project.config, None)
+        self.assertEqual(self.project.name, self.project_name)
+        self.assertEqual(self.db.project.name, self.project.name)
 
     def test_b_register_with_username_and_password(self):
         result = self.db.register_with_email_and_password(self.email, self.password)

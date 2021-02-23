@@ -6,11 +6,13 @@ from enum import Enum
 
 _logger = logging.getLogger(__name__)
 
-def connection(app = None):
-    if not app:
-        app = hopcolony_core.get_app()
+def connection(project = None):
+    if not project:
+        project = hopcolony_core.get_project()
+    if not project:
+        raise hopcolony_core.ConfigNotFound("Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.")
     
-    return HopTopicConnection(app)
+    return HopTopicConnection(project)
 
 class OutputType(Enum):
     BYTES = 1
@@ -24,15 +26,15 @@ class HopTopicConnection:
     _subscribers = {}
     _publishers = []
 
-    def __init__(self, app, pool_threads = 1):
-        self.app = app
+    def __init__(self, project, pool_threads = 1):
+        self.project = project
         self.pool_threads = pool_threads
 
         self.host = "topics.hopcolony.io"
         self.port = 32012
-        self.credentials = pika.PlainCredentials(self.app.config.identity, self.app.config.token)
+        self.credentials = pika.PlainCredentials(self.project.config.identity, self.project.config.token)
         self.parameters = pika.ConnectionParameters(host=self.host, port=self.port, 
-                    virtual_host=self.app.config.identity, credentials=self.credentials)
+                    virtual_host=self.project.config.identity, credentials=self.credentials)
 
         atexit.register(self.close)
 

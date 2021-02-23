@@ -4,7 +4,7 @@ import hopcolony_core
 from hopcolony_core import jobs
 
 app = typer.Typer()
-cfg = hopcolony_core.get_app().config
+cfg = hopcolony_core.config()
 
 @app.command()
 def create(name: str):

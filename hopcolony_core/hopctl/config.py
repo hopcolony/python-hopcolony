@@ -21,7 +21,10 @@ def echo(json):
 
 @app.command()
 def get():
-    echo(cfg.json)
+    if cfg:
+        echo(cfg.json)
+    else:
+        typer.secho("Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.", err=True, fg = typer.colors.RED)
 
 def commit(config):
     json = config.commit()
@@ -29,10 +32,10 @@ def commit(config):
     echo(json)
 
 @app.command()
-def set(app: Optional[str] = None, project: Optional[str] = None,
+def set(username: Optional[str] = None, project: Optional[str] = None,
         token: Optional[str] = None, file: Optional[str] = None):
     
-    if not app and not project and not token and not file:
+    if not username and not project and not token and not file:
         typer.secho(f"Nothing to set", err = True, fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
@@ -45,7 +48,7 @@ def set(app: Optional[str] = None, project: Optional[str] = None,
             typer.secho(f"Could not find the file {file}", err = True, fg=typer.colors.RED)
             raise typer.Exit(code=1)
     
-    config = hopcolony_core.HopConfig.update(app = app, project = project, token = token)
+    config = hopcolony_core.HopConfig.update(username = username, project = project, token = token)
     commit(config)
     raise typer.Exit()
 
