@@ -1,0 +1,32 @@
+name: Publish Docker image
+on:
+  push:
+    branches:
+      - master
+      - develop
+
+env:
+  VERSION: 0.1.1
+
+jobs:
+  setup-build-push:
+    name: Setup, Build and Push
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    
+    - name: Login to DockerHub
+      uses: docker/login-action@v1 
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - uses: docker/build-push-action@v2
+      with:
+        push: true
+        context: docker
+        file: docker/Dockerfile
+        tags: hopcolony/hopcolony_core:${{ env.VERSION }}
+        build-args: VERSION=${{ env.VERSION }}
