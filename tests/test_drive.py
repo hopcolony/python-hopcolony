@@ -4,8 +4,8 @@ import hopcolony_core
 from hopcolony_core import drive
 
 class TestDrive(unittest.TestCase):
-    user_name = "console@hopcolony.io"
-    project_name = "console"
+    user_name = "core@hopcolony.io"
+    project_name = "core"
     token_name = "supersecret"
 
     bucket = "hop-test"

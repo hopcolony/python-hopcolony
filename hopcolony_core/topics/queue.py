@@ -12,11 +12,12 @@ class MalformedJson(Exception):
     pass
 
 class HopTopicQueue:
-    def __init__(self, channel, exchange = "", binding = "", name = "", exclusive = False, auto_delete = True):
+    def __init__(self, channel, exchange = "", binding = "", name = "", durable = False, exclusive = False, auto_delete = False):
         self.channel = channel
         self.exchange = exchange
         self.binding = binding
         self.name = name
+        self.durable = durable
         self.exclusive = exclusive
         self.auto_delete = auto_delete
     
@@ -24,7 +25,7 @@ class HopTopicQueue:
         self.callback = callback
         self.output_type = output_type
 
-        result = self.channel.queue_declare(self.name, exclusive=self.exclusive, auto_delete=self.auto_delete)
+        result = self.channel.queue_declare(self.name, durable=self.durable, exclusive=self.exclusive, auto_delete=self.auto_delete)
         queue_name = result.method.queue
         if self.exchange:
             self.channel.queue_bind(exchange=self.exchange, queue=queue_name, routing_key=self.binding)

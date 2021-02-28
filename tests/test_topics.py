@@ -5,8 +5,8 @@ from hopcolony_core import topics
 import time, json
 
 class TestTopics(unittest.TestCase):
-    user_name = "console@hopcolony.io"
-    project_name = "console"
+    user_name = "core@hopcolony.io"
+    project_name = "core"
     token_name = "supersecret"
 
     topic = "test-topic"

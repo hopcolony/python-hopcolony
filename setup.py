@@ -23,7 +23,8 @@ setup(
         "pyyaml==5.3.1",
         "click-spinner==0.1.10",
         "tabulate==0.8.7",
-        "beautifulsoup4==4.9.3"
+        "beautifulsoup4==4.9.3",
+        "pika==1.2.0"
     ],
     packages=find_packages(),
     python_requires='>=3.5',

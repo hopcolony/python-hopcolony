@@ -11,16 +11,16 @@ class ExchangeType(Enum):
     TOPIC = 3
 
 class HopTopicExchange:
-    def __init__(self, channel, name, create, type, auto_delete=False, durable=True):
+    def __init__(self, channel, name, create, type=ExchangeType.TOPIC, durable=False, auto_delete=False):
         self.channel = channel
         self.name = name
         self.create = create
         self.type = type
-        self.auto_delete = auto_delete
         self.durable = durable
+        self.auto_delete = auto_delete
 
         if self.create:
-            self.channel.exchange_declare(exchange=self.name, exchange_type=self.str_type, auto_delete=self.auto_delete, durable=self.durable)
+            self.channel.exchange_declare(exchange=self.name, exchange_type=self.str_type, durable=self.durable, auto_delete=self.auto_delete)
     
     @property
     def str_type(self):
