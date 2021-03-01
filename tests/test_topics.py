@@ -37,39 +37,35 @@ class TestTopics(unittest.TestCase):
                     output_type=topics.OutputType.STRING)
         time.sleep(0.1)
         self.conn.topic(self.topic).send(self.data_string)
-        time.sleep(0.3)
+        time.sleep(0.1)
         self.conn.close_open_connections()
-        time.sleep(0.2)
 
     def test_c_subscriber_publisher_good_json(self):  
         self.conn.topic(self.topic).subscribe(lambda msg: self.assertEqual(msg, self.data_json), 
                     output_type=topics.OutputType.JSON)
-        time.sleep(0.3)
+        time.sleep(0.1)
         self.conn.topic(self.topic).send(self.data_json)
-        time.sleep(0.2)
+        time.sleep(0.1)
         self.conn.close_open_connections()
-        time.sleep(0.2)
 
     def test_d_exchange_topic(self):  
         self.conn.exchange(self.exchange).topic(self.topic).subscribe(lambda msg: self.assertEqual(msg, self.data_json), 
                     output_type=topics.OutputType.JSON)
-        time.sleep(0.3)
+        time.sleep(0.1)
         self.conn.exchange(self.exchange).topic(self.topic).send(self.data_json)
-        time.sleep(0.2)
+        time.sleep(0.1)
         self.conn.close_open_connections()
-        time.sleep(0.2)
 
     def test_e_exchange_queue(self):  
         self.conn.exchange(self.exchange).queue(self.topic).subscribe(lambda msg: self.assertEqual(msg, self.data_json), 
                     output_type=topics.OutputType.JSON)
         self.conn.exchange(self.exchange).queue(self.topic).subscribe(lambda msg: self.assertEqual(msg, self.data_json), 
                     output_type=topics.OutputType.JSON)
-        time.sleep(0.3)
+        time.sleep(0.1)
         self.conn.exchange(self.exchange).queue(self.topic).send(self.data_json)
         self.conn.exchange(self.exchange).queue(self.topic).send(self.data_json)
-        time.sleep(0.2)
+        time.sleep(0.1)
         self.conn.close_open_connections()
-        time.sleep(0.2)
 
 if __name__ == '__main__':
     unittest.main()
