@@ -2,7 +2,7 @@ import hopcolony_core
 from .queue import *
 from .exchange import *
 import pika, atexit, signal
-import sys, logging
+import sys, logging, threading
 
 _logger = logging.getLogger(__name__)
 
@@ -15,6 +15,8 @@ def connection(project = None):
     return HopTopicConnection(project)
 
 class HopTopicConnection:
+    open_connections = []
+
     def __init__(self, project):
         self.project = project
 
@@ -23,18 +25,20 @@ class HopTopicConnection:
         self.credentials = pika.PlainCredentials(self.project.config.identity, self.project.config.token)
         self.parameters = pika.ConnectionParameters(host=self.host, port=self.port, 
                     virtual_host=self.project.config.identity, credentials=self.credentials)
-        self.connection = pika.BlockingConnection(self.parameters)
 
         atexit.register(self.close)
 
     def queue(self, name):
-        return HopTopicQueue(self.connection, binding = name, name = name)
+        return HopTopicQueue(self.add_open_connection, self.parameters, binding = name, name = name)
 
-    def exchange(self, name, create = True, type = ExchangeType.TOPIC):
-        return HopTopicExchange(self.connection, name, create, type)
+    def exchange(self, name, create = False):
+        return HopTopicExchange(self.add_open_connection, self.parameters, name, create, type = ExchangeType.FANOUT)
 
-    def topic(self, name):
-        return HopTopicQueue(self.connection, exchange = "amq.topic", binding = name)        
+    def topic(self, name):     
+        return HopTopicQueue(self.add_open_connection, self.parameters, exchange = "amq.topic", binding = name)
+
+    def add_open_connection(self, conn):
+        self.open_connections.append(conn)
 
     def signal_handler(self, signal, frame):
         _logger.error('You pressed Ctrl+C!')
@@ -45,7 +49,12 @@ class HopTopicConnection:
         forever = threading.Event()
         forever.wait()
 
+    def close_open_connections(self):
+        for conn in self.open_connections:
+            conn.close()
+        self.open_connections.clear()
+
     def close(self):
-        self.connection.close()
+        self.close_open_connections()
         if hasattr(atexit, 'unregister'):
             atexit.unregister(self.close)
