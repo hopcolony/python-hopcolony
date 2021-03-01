@@ -11,8 +11,10 @@ class ExchangeType(Enum):
     TOPIC = 3
 
 class HopTopicExchange:
-    def __init__(self, channel, name, create, type=ExchangeType.TOPIC, durable=False, auto_delete=False):
-        self.channel = channel
+    def __init__(self, connection, name, create, type=ExchangeType.TOPIC, durable=False, auto_delete=False):
+        self.connection = connection
+        self.channel = self.connection.channel()
+        self.channel.confirm_delivery()
         self.name = name
         self.create = create
         self.type = type
@@ -30,9 +32,9 @@ class HopTopicExchange:
             return "fanout"
         return "topic"
     
-    def listen(self, callback, output_type = OutputType.STRING):
-        queue = HopTopicQueue(self.channel, exchange = self.name)
-        return queue.listen(callback, output_type=output_type)
+    def subscribe(self, callback, output_type = OutputType.STRING):
+        queue = HopTopicQueue(self.connection, exchange = self.name)
+        return queue.subscribe(callback, output_type=output_type)
   
     def send(self, body):
         if isinstance(body, dict):
@@ -40,7 +42,7 @@ class HopTopicExchange:
         return self.channel.basic_publish(exchange=self.name, routing_key="", body=body)
 
     def topic(self, name):
-        return HopTopicQueue(self.channel, exchange = self.name, binding = name)
+        return HopTopicQueue(self.connection, exchange = self.name, binding = name)
 
     def queue(self, name):
-        return HopTopicQueue(self.channel, exchange = self.name, name = name, binding = name)
+        return HopTopicQueue(self.connection, exchange = self.name, name = name, binding = name)

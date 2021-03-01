@@ -24,19 +24,17 @@ class HopTopicConnection:
         self.parameters = pika.ConnectionParameters(host=self.host, port=self.port, 
                     virtual_host=self.project.config.identity, credentials=self.credentials)
         self.connection = pika.BlockingConnection(self.parameters)
-        self.channel = self.connection.channel()
-        self.channel.confirm_delivery()
 
         atexit.register(self.close)
 
     def queue(self, name):
-        return HopTopicQueue(self.channel, binding = name, name = name)
+        return HopTopicQueue(self.connection, binding = name, name = name)
 
     def exchange(self, name, create = True, type = ExchangeType.TOPIC):
-        return HopTopicExchange(self.channel, name, create, type)
+        return HopTopicExchange(self.connection, name, create, type)
 
     def topic(self, name):
-        return HopTopicQueue(self.channel, exchange = "amq.topic", binding = name)        
+        return HopTopicQueue(self.connection, exchange = "amq.topic", binding = name)        
 
     def signal_handler(self, signal, frame):
         _logger.error('You pressed Ctrl+C!')

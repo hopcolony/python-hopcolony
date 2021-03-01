@@ -12,8 +12,10 @@ class MalformedJson(Exception):
     pass
 
 class HopTopicQueue:
-    def __init__(self, channel, exchange = "", binding = "", name = "", durable = False, exclusive = False, auto_delete = False):
-        self.channel = channel
+    def __init__(self, connection, exchange = "", binding = "", name = "", durable = False, exclusive = False, auto_delete = True):
+        self.connection = connection
+        self.channel = self.connection.channel()
+        self.channel.confirm_delivery()
         self.exchange = exchange
         self.binding = binding
         self.name = name
@@ -21,7 +23,7 @@ class HopTopicQueue:
         self.exclusive = exclusive
         self.auto_delete = auto_delete
     
-    def listen(self, callback, output_type = OutputType.STRING):
+    def subscribe(self, callback, output_type = OutputType.STRING):
         self.callback = callback
         self.output_type = output_type
 
@@ -54,7 +56,7 @@ class HopTopicQueue:
             try:
                 out = json.loads(body.decode('utf-8'))
             except json.decoder.JSONDecodeError as e:
-                raise MalformedJson(f"Malformed json message received on topic \"{self.topic}\": {body}") from e
+                raise MalformedJson(f"Malformed json message received on topic \"{self.binding}\": {body}") from e
             
         self.callback(out)
 
