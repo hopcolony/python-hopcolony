@@ -24,7 +24,10 @@ setup(
         "click-spinner==0.1.10",
         "tabulate==0.8.7",
         "beautifulsoup4==4.9.3",
-        "pika==1.2.0"
+        "pika==1.2.0",
+        "selenium==3.141.0",
+        "simple-term-menu==0.10.5",
+        "psutil==5.8.0"
     ],
     packages=find_packages(),
     python_requires='>=3.5',

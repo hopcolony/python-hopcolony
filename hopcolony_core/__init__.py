@@ -90,9 +90,9 @@ class Project:
                 try:
                     self.config = HopConfig.fromFile(HopConfig.hop_file)
                 except FileNotFoundError:
-                    raise ConfigNotFound("Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.")
+                    raise ConfigNotFound("Hop Config not found. Run 'hopctl login' or place a .hop.config file here.")
             else:
-                raise ConfigNotFound("Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.")
+                raise ConfigNotFound("Hop Config not found. Run 'hopctl login' or place a .hop.config file here.")
         except IsADirectoryError:
             raise ConfigNotFound(f"Config file provided [{config_file}] is a directory")
     

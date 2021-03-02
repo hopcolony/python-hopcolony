@@ -8,7 +8,9 @@ def client(project = None):
     if not project:
         project = hopcolony_core.get_project()
     if not project:
-        raise hopcolony_core.ConfigNotFound("Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.")
+        raise hopcolony_core.ConfigNotFound("Hop Config not found. Run 'hopctl login' or place a .hop.config file here.")
+    if not project.config.project:
+        raise hopcolony_core.ConfigNotFound("You have no projects yet. Create one at https://console.hopcolony.io")
 
     return HopDoc(project)
 

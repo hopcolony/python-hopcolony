@@ -6,25 +6,29 @@ app = typer.Typer()
 cfg = hopcolony_core.config()
 
 def echo(json):
-    missing = False
+    missing = []
     for key, value in json.items():
         fg = typer.colors.WHITE 
         if not value:
             fg = typer.colors.RED
-            missing = True
+            missing.append(key)
 
         typer.secho(f"{key}: {value}", fg = fg)
 
-    if missing:
-        cmd = typer.style("hopctl config set", fg = typer.colors.YELLOW)
-        typer.echo(f"\nRemember to set the missing values with: {cmd}")
+    if "username" in missing:
+        cmd = typer.style("hopctl login", fg = typer.colors.YELLOW)
+        typer.echo(f"\nRemember to login with: {cmd}")
+        return
+    if "project" in missing:
+        typer.secho("\nYou have no projects yet. Create one at https://console.hopcolony.io", fg = typer.colors.YELLOW)
+        return
 
 @app.command()
 def get():
     if cfg:
         echo(cfg.json)
     else:
-        typer.secho("Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.", err=True, fg = typer.colors.RED)
+        typer.secho("Hop Config not found. Run 'hopctl login' or place a .hop.config file here.", err=True, fg = typer.colors.RED)
 
 def commit(config):
     json = config.commit()

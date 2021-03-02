@@ -1,17 +1,23 @@
 import hopcolony_core
 import hopcolony_core.docs as docs
+import hopcolony_core.topics as topics
 
 from .auth_user import *
 from .auth_token import *
 
-import requests, re, uuid
+import requests, re, uuid, time
 from datetime import datetime
+import functools, multiprocessing
+from simple_term_menu import TerminalMenu
+import subprocess
 
 def client(project = None):
     if not project:
         project = hopcolony_core.get_project()
     if not project:
-        raise hopcolony_core.ConfigNotFound("Hop Config not found. Run 'hopctl config set' or place a .hop.config file here.")
+        raise hopcolony_core.ConfigNotFound("Hop Config not found. Run 'hopctl login' or place a .hop.config file here.")
+    if not project.config.project:
+        raise hopcolony_core.ConfigNotFound("You have no projects yet. Create one at https://console.hopcolony.io")
     
     return HopAuth(project)
 
@@ -32,6 +38,64 @@ class HopAuth:
     
     def user(self, uuid):
         return UserReference(self._docs, uuid)
+
+    def select_project(self, user):
+        if not len(user.projects):
+            return None
+        terminal_menu = TerminalMenu(user.projects)
+        project_index = terminal_menu.show()
+        project =  user.projects[project_index]
+
+        snapshot = self._docs.index(".hop.projects").where("uuid", isEqualTo=user.uuid).where("name", isEqualTo=project).get()
+        if snapshot.success and len(snapshot.docs):
+            return hopcolony_core.HopConfig(username = user.email, project = project, token = snapshot.docs[0].source["token"])
+        else:
+            return None
+
+    def sign_in_with_hopcolony(self, scopes = []):
+        scopes = ','.join(scopes)
+        client_id = self.project.config.identity
+        
+        def get_response(finished, queue, msg):
+            if msg["success"]:
+                token = Token(msg["idToken"])
+                queue.put(token)
+            else:
+                queue.put(msg["reason"])
+            
+            finished.set()
+
+        finished = multiprocessing.Event()
+        queue = multiprocessing.Queue()
+        callback_with_event = functools.partial(get_response, finished, queue)
+
+        conn = topics.connection()
+        conn.exchange("oauth").topic(client_id).subscribe(callback_with_event, output_type = topics.OutputType.JSON)
+
+        # Open the browser for login
+        proc = subprocess.Popen(["firefox", f"https://accounts.hopcolony.io?client_id={client_id}&scope={scopes}"], 
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # Wait until there is a login response
+        print("Please, login using the browser")
+        finished.wait()
+
+        # Get the response through the queue
+        result = queue.get()
+
+        # Close connection with topics
+        conn.close()
+
+        # Parse the response
+        if isinstance(result, str):
+            return UserSnapshot(None, success=False, reason=result)
+
+        # Close the browser window
+        proc.terminate()
+        proc.wait()
+
+        user = HopUser.fromJson(result.payload)
+        return UserSnapshot(user, success=True)
     
     def register_with_email_and_password(self, email, password, locale = "es"):
         assert email and password, "Email and password can not be empty"

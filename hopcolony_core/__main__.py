@@ -1,9 +1,30 @@
 #!/usr/bin/env python
 
 import hopcolony_core
+from hopcolony_core import auth
 import typer, yaml
 
 app = typer.Typer()
+
+@app.command()
+def login():
+    hopcolony_core.initialize(username="core@hopcolony.io", project="core", token="supersecret")
+    client = auth.client()
+    auth_result = client.sign_in_with_hopcolony(scopes=["projects"])
+    if auth_result.success:
+        if not auth_result.user.projects:
+            hopcolony_core.HopConfig(username=auth_result.user.email).commit()
+            typer.secho("You have no projects yet. Create one at https://console.hopcolony.io", fg = typer.colors.YELLOW)
+        else:
+            typer.echo(f"Welcome {auth_result.user.name}! Please, select the project:")
+            project = client.select_project(auth_result.user)
+            if not project:
+                typer.secho(f"Something went wrong retrieving the projects. Contact your administrator", err=True, fg = typer.colors.RED)
+                return 
+            project.commit()
+            typer.secho(f"Successfully configured \"{project.project}\" project", fg = typer.colors.GREEN)
+    else:
+        typer.secho(auth_result.reason, err=True, fg = typer.colors.RED)
 
 def load():
     try:

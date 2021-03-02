@@ -14,6 +14,7 @@ class HopUser:
     lastLoginTs: datetime = None
     password: str = None
     name: str = None
+    projects: list = None
     picture: str = None
     locale: str = None
     idToken: Token = None
@@ -30,6 +31,7 @@ class HopUser:
                         "lastLoginTs" in json else None,
             password = json["password"] if "password" in json else None,
             name = json["name"] if "name" in json else None,
+            projects = json["projects"] if "projects" in json else [],
             picture = json["picture"] if "picture" in json else None,
             locale = json["locale"] if "locale" in json else None,
             idToken = Token(json["idToken"]) if "idToken" in json else None,
@@ -44,6 +46,7 @@ class HopUser:
 class UserSnapshot:
     user: HopUser
     success: bool = True
+    reason: str = ""
 
 class UserReference:
     def __init__(self, docs, id):
