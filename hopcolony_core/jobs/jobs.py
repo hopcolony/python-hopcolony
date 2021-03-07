@@ -2,16 +2,18 @@ import logging, requests, re
 from itertools import cycle
 from urllib.parse import urlparse
 from parsel import Selector
-from selenium.webdriver import Firefox, FirefoxOptions, FirefoxProfile, DesiredCapabilities
+from selenium.webdriver import Chrome
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver import ActionChains
 from selenium import common
-from webdriver_manager.firefox import GeckoDriverManager
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 from selenium.webdriver.support.ui import WebDriverWait as wait
 from selenium.webdriver.support import expected_conditions as EC
+import sys
+sys.setrecursionlimit(2000)
 
 class Job:
     entrypoint = None
@@ -20,7 +22,7 @@ class Job:
         # Set the input args as attributes to the job
         self.__dict__.update(kwargs)
 
-        printger = logging.getLogger(self.name)
+        self.logger = logging.getLogger(self.name)
         logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 class Engine:
@@ -56,7 +58,8 @@ class Engine:
 
         try:
             if not self.job.selenium:
-                data = requests.get(url, headers = self.headers, proxies = {"http": self.proxy})
+                # data = requests.get(url, headers = self.headers, proxies = {"http": self.proxy})
+                data = requests.get(url, headers = self.headers)
                 response = RESTJobResponse(self, data)
             else:
                 if isinstance(url, str):
@@ -65,8 +68,8 @@ class Engine:
                     ActionChains(self.browser).click(url).perform()
                 response = SeleniumJobResponse(self)
                 # Check captcha
-                if self.do_captcha(self.browser):
-                    return
+                # if self.do_captcha(self.browser):
+                #     return
         except requests.exceptions.ConnectionError:
             self.job.logger.error(f"Could not get a connection with \"{url}\"")
             return
@@ -92,34 +95,34 @@ class Engine:
     profile = None
     capabilities = None
 
-    def setUpProfile(self):
-        self.profile = FirefoxProfile()
-        self.profile._install_extension("buster_captcha_solver_for_humans-1.1.0-an+fx.xpi", unpack=False)
-        self.profile.set_preference("security.fileuri.strict_origin_policy", False)
-        self.profile.update_preferences()
+    # def setUpProfile(self):
+    #     self.profile = FirefoxProfile()
+    #     self.profile._install_extension("buster_captcha_solver_for_humans-1.1.0-an+fx.xpi", unpack=False)
+    #     self.profile.set_preference("security.fileuri.strict_origin_policy", False)
+    #     self.profile.update_preferences()
 
-    def setUpOptions(self):
-        self.options = FirefoxOptions()
-        # self.options.headless = self.headless
+    # def setUpOptions(self):
+    #     self.options = FirefoxOptions()
+    #     # self.options.headless = self.headless
     
-    def setUpCapabilities(self):
-        self.capabilities = DesiredCapabilities.FIREFOX
-        self.capabilities['marionette'] = True
+    # def setUpCapabilities(self):
+    #     self.capabilities = DesiredCapabilities.FIREFOX
+    #     self.capabilities['marionette'] = True
     
-    def setUpProxy(self):
-        self.proxy = next(self.proxies)
-        self.capabilities['proxy'] = { "proxyType": "MANUAL", "httpProxy": self.proxy, "ftpProxy": self.proxy, "sslProxy": self.proxy }
+    # def setUpProxy(self):
+    #     self.proxy = next(self.proxies)
+    #     self.capabilities['proxy'] = { "proxyType": "MANUAL", "httpProxy": self.proxy, "ftpProxy": self.proxy, "sslProxy": self.proxy }
         
     def start(self):
         if self.job.selenium:
-            self.setUpProfile()
-            self.setUpOptions()
-            self.setUpCapabilities()
+            # self.setUpProfile()
+            # self.setUpOptions()
+            # self.setUpCapabilities()
             # self.setUpProxy()
 
-            self.browser = Firefox(options=self.options, capabilities=self.capabilities, 
-                    firefox_profile=self.profile, executable_path=GeckoDriverManager().install())
-
+            # self.browser = Firefox(options=self.options, capabilities=self.capabilities, 
+            #         firefox_profile=self.profile, executable_path=GeckoDriverManager().install())
+            self.browser = Chrome(ChromeDriverManager().install())
         self.get(self.job.entrypoint)
 
 class RESTJobResponse:
@@ -152,12 +155,31 @@ class SeleniumJobResponse:
         parsed_uri = urlparse(self.url)
         self.base = f"{parsed_uri.scheme}://{parsed_uri.netloc}/"
         self.raw = engine.browser.page_source
+    
+    @property
+    def driver(self):
+        return self.engine.browser
 
     def xpath(self, query):
-        return self.engine.browser.find_elements_by_xpath(query)
+        return self.driver.find_elements_by_xpath(query)
+    
+    def css(self, selector):
+        return self.driver.find_elements_by_css_selector(selector)
+    
+    def tag(self, tag):
+        return self.driver.find_element_by_tag_name(tag)
 
-    def click(self, element, callback = None):
+    def click(self, element):
+        ActionChains(self.driver).click(element).perform()
+
+    def click_and_call(self, element, callback = None):
         self.engine.get(element, callback)
+
+    def move_to_element(self, element):
+        ActionChains(self.driver).move_to_element(element).perform()
+
+    def go_to_end(self):
+        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
     def follow(self, endpoint, callback = None):
         url = self.base + endpoint

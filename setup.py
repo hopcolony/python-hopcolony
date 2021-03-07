@@ -27,7 +27,8 @@ setup(
         "pika==1.2.0",
         "selenium==3.141.0",
         "simple-term-menu==0.10.5",
-        "psutil==5.8.0"
+        "psutil==5.8.0",
+        "webdriver-manager==3.3.0"
     ],
     packages=find_packages(),
     python_requires='>=3.5',

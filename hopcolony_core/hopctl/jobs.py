@@ -72,7 +72,7 @@ def run(name: str, project: Optional[str] = ".", skip: Optional[bool] = False):
         raise typer.Exit(code=1)
     
     # Install the requirements if not skipped
-    if not skip and name in settings and "requirements" in settings[name] and settings[name]["requirements"]:
+    if not skip and name in settings and settings[name] and "requirements" in settings[name] and settings[name]["requirements"]:
         requirements = settings[name]["requirements"].strip().split(' ')
         with click_spinner.spinner():
             typer.echo(f"Installing requirements: {requirements}")
@@ -103,7 +103,7 @@ def run(name: str, project: Optional[str] = ".", skip: Optional[bool] = False):
     
     # Get the classes for the pipelines
     pipelines = None
-    if name in settings and "pipelines" in settings[name] and settings[name]["pipelines"]:
+    if name in settings and settings[name] and "pipelines" in settings[name] and settings[name]["pipelines"]:
         pipelines = [Pipeline.fromJson(pipeline) for pipeline in settings[name]["pipelines"]]
         for pipeline in pipelines:
             assert pipeline.cls != None, pipeline.error
@@ -118,7 +118,7 @@ def run(name: str, project: Optional[str] = ".", skip: Optional[bool] = False):
 
     # Find the args for the job
     args = {}
-    if name in settings and "args" in settings[name] and settings[name]["args"]:
+    if name in settings and settings[name] and "args" in settings[name] and settings[name]["args"]:
         args = settings[name]["args"]
     
     # Inistanciate the job, pipelines and engine
