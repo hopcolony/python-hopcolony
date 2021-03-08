@@ -26,7 +26,7 @@ class Job:
         logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 class Engine:
-    last_get = None
+    last_gets = ["a", "b", "c", "d"]
     proxies = cycle(["3.239.28.97:8080", "3.238.35.140:8080", "174.129.147.226:8080"])
     headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36"}
 
@@ -48,10 +48,13 @@ class Engine:
         return False
     
     def get(self, url, callback = None):
+        # Check you are not following the url you visited the last 3 times
         if isinstance(url, str):
-            assert self.last_get != url, f"You're trying to follow an url you have just visited: {url}"
-            self.last_get = url
+            self.last_gets.pop(0)
+            self.last_gets.append(url)
+            assert all(x==self.last_gets[0] for x in self.last_gets) == False, f"You're trying to follow an url you visited the last {len(self.last_gets)-1} times: {url}"
 
+        # Assign different callback if provided
         parse_callback = self.job.parse
         if callback:
             parse_callback = callback

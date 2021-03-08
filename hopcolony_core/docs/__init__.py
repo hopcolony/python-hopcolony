@@ -63,6 +63,11 @@ class HopDocClient:
         resp = self._session.request("POST", self._base_url + path, **kwargs)
         resp.raise_for_status()
         return resp
+
+    def put(self, path, **kwargs):
+        resp = self._session.request("PUT", self._base_url + path, **kwargs)
+        resp.raise_for_status()
+        return resp
         
     def delete(self, path, **kwargs):
         resp = self._session.request("DELETE", self._base_url + path, **kwargs)
