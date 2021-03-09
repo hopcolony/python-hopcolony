@@ -37,6 +37,9 @@ class HopDocs(JobPipeline):
             response = self.db.index(index).add(source)
 
         if not response.success:
-            self.logger.error(f"[{self.name} pipeline] Insertion not succeded")
-            
+            count_label = f"[{item['count']}]" if "count" in item else ""
+            self.logger.error(f"[{self.name} pipeline]{count_label} Insertion not succeded: {response.reason}")
+        elif "count" in item:
+            self.logger.info(f"[{item['count']}] Inserted Successfully")
+
         return item

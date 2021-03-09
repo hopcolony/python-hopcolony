@@ -9,7 +9,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver import ActionChains
 from selenium import common
 from webdriver_manager.chrome import ChromeDriverManager
-import time
+import time, json
 from selenium.webdriver.support.ui import WebDriverWait as wait
 from selenium.webdriver.support import expected_conditions as EC
 import sys
@@ -24,6 +24,12 @@ class Job:
 
         self.logger = logging.getLogger(self.name)
         logging.basicConfig(level=logging.INFO, format='%(message)s')
+
+    def write(self, data, name = None, extension = "html"):
+        name = name if name is not None else self.page
+        with open(f"{name}.{extension}", "w") as f:
+            data = json.dumps(data) if extension == "json" else data
+            f.write(data)
 
 class Engine:
     last_gets = ["a", "b", "c", "d"]
@@ -92,6 +98,8 @@ class Engine:
         except TypeError as e:
             # Probably returning nothing from parse method
             pass
+        except Exception as e:
+            print(e)
     
     headless = False
     options = None
@@ -134,7 +142,7 @@ class RESTJobResponse:
         self.url = response.url
         self.response = response
         parsed_uri = urlparse(self.url)
-        self.base = f"{parsed_uri.scheme}://{parsed_uri.netloc}/"
+        self.base = f"{parsed_uri.scheme}://{parsed_uri.netloc}"
         self.status = response.status_code
         self.raw = response.text
         self.selector = Selector(text=self.raw)
@@ -144,8 +152,14 @@ class RESTJobResponse:
 
     def xpath(self, query):
         return self.selector.xpath(query)
+
+    def get(self, url, params = {}):
+        data = requests.get(url, params = params)
+        return RESTJobResponse(self, data)
         
-    def follow(self, endpoint, callback):
+    def follow(self, endpoint, callback = None):
+        if endpoint is None:
+            return
         url = self.base + endpoint
         if re.match(r"http.*", endpoint):
             url = endpoint
