@@ -164,8 +164,11 @@ def deploy(name: str, project: Optional[str] = "."):
         job_code = f.read()
     
     # Get custom pipelines code
-    with open(f"{project}/pipelines.py") as f:
-        pipelines_code = f.read()
+    try:
+        with open(f"{project}/pipelines.py") as f:
+            pipelines_code = f.read()
+    except:
+        pipelines_code = ""
 
     try:
         client = jobs.client()

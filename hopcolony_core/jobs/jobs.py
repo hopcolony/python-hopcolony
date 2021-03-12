@@ -156,6 +156,10 @@ class RESTJobResponse:
     def get(self, url, params = {}):
         data = requests.get(url, params = params)
         return RESTJobResponse(self, data)
+
+    def post(self, url, json = {}):
+        data = requests.post(url, json = json)
+        return RESTJobResponse(self, data)
         
     def follow(self, endpoint, callback = None):
         if endpoint is None:

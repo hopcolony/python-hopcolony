@@ -40,3 +40,22 @@ class ExampleJob(jobs.Job):
         next_page = response.css('a.morelink::attr(href)').get()
         if next_page is not None:
             response.follow(next_page)"""
+
+job_spec = """apiVersion: hopcolony.io/v1
+kind: {kind}
+metadata:
+  name: {name}
+spec:
+  {schedule}
+  job: |-
+    {job}
+  
+  pipelines: |-
+    {pipelines}
+
+  settings:
+    {settings}
+  
+  config:
+    {config}
+"""

@@ -28,7 +28,8 @@ setup(
         "selenium==3.141.0",
         "simple-term-menu==0.10.5",
         "psutil==5.8.0",
-        "webdriver-manager==3.3.0"
+        "webdriver-manager==3.3.0",
+        "kubernetes==12.0.1"
     ],
     packages=find_packages(),
     python_requires='>=3.5',
