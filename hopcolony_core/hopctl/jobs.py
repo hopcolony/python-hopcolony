@@ -1,4 +1,4 @@
-import typer, yaml, os, inspect, sys, json, subprocess, click_spinner, requests
+import typer, yaml, os, inspect, sys, json, subprocess, click_spinner, requests, time
 from typing import Optional
 import hopcolony_core
 from hopcolony_core import jobs
@@ -144,7 +144,7 @@ def find_filename(name, project):
     return found
 
 @app.command()
-def deploy(name: str, project: Optional[str] = "."):
+def deploy(name: str, project: Optional[str] = ".", schedule: Optional[str] = None):
     if not cfg.valid:
         typer.secho(f"Something is wrong with your config", err = True, fg=typer.colors.RED)
         config.echo(cfg.json)
@@ -171,14 +171,10 @@ def deploy(name: str, project: Optional[str] = "."):
         pipelines_code = ""
 
     try:
-        client = jobs.client()
-        client.deploy(name, job_code, pipelines = pipelines_code, settings = settings)
-    except requests.exceptions.ConnectionError:
-        typer.secho(f"Something went wrong while deploying... Try again later.", err = True, fg=typer.colors.RED)
+        jobs.client().deploy(name, job_code, pipelines = pipelines_code, settings = settings, schedule = schedule)
+    except jobs.ResourceAlreadyExists:
+        typer.secho(f"Cron Job \"{name}\" already exists..", err = True, fg=typer.colors.RED)
         raise typer.Exit(code=1)
-    except requests.exceptions.ReadTimeout:
-        ## Trick not to wait for the response
-        pass
 
 if __name__ == "__main__":
     app()

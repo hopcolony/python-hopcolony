@@ -44,8 +44,9 @@ class ExampleJob(jobs.Job):
 job_spec = """apiVersion: hopcolony.io/v1
 kind: {kind}
 metadata:
-  name: {name}
+  name: {metadata_name}
 spec:
+  name: {name}
   {schedule}
   job: |-
     {job}
