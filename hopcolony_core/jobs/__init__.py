@@ -40,7 +40,7 @@ class HopJobs:
     def deploy(self, name, job, pipelines = "", settings = {}, schedule = None):
         cfg = hopcolony_core.config()
         spec = job_spec.format(kind = "HopCronJob" if schedule else "HopJob", 
-                metadata_name = name if schedule else f"job-{name}-{str(time.time()).replace('.', '')}",
+                metadata_name = f"{cfg.project}-{name}" if schedule else f"{cfg.project}-job-{name}-{str(time.time()).replace('.', '')}",
                 name = name, schedule = f"schedule: '{schedule}'" if schedule else "", 
                 job = job.replace("\n", "\n    "), pipelines = pipelines.replace("\n", "\n    "),
                 settings = yaml.dump(settings).replace("\n", "\n    "), config = yaml.dump(cfg.json).replace("\n", "\n    "))
