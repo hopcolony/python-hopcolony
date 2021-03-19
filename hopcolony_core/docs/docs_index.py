@@ -93,7 +93,7 @@ class IndexReference(QueryableReference):
         except requests.exceptions.HTTPError as e:
             return DocumentSnapshot(None, success = False, reason = str(e))
 
-    def setMapping(self, mapping, create = True):
+    def setMapping(self, field, type, create = True):
         try:
             if create:
                 self.client.put(f"/{self.index}")
@@ -102,7 +102,11 @@ class IndexReference(QueryableReference):
 
         try:
             doc = {
-                "properties": mapping
+                "properties": {
+                    field: {
+                        "type": type
+                    }
+                }
             }
             response = self.client.put(f"/{self.index}/_mapping", json = doc)
             return response.json()
