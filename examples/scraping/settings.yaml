@@ -1,0 +1,18 @@
+fotocasa:
+  args:
+    type: "avila-provincia"
+    zone: "todas-las-zonas"
+  pipelines:
+    - hop-docs
+
+pisos.com:
+  args:
+    zone: "pisos-guadalajara"
+  pipelines:
+    - hop-docs
+
+solvia:
+  args:
+    operacion: "COMPRA"
+    tipoVivienda: 1
+    idProvincia: 5

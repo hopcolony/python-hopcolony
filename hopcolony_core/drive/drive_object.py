@@ -76,7 +76,7 @@ class ObjectReference:
     def get_presigned(self):
         resource = f"/{self.bucket}/{self.id}"
         query = self.client.signer.getQuerySignature("GET", resource)
-        return f"{self.client.base_url}/{self.client.identity}{urllib.parse.quote(resource)}{query}"
+        return f"{self.client.base_url}{urllib.parse.quote(resource)}{query}"
 
     def put(self, data):
         try:
