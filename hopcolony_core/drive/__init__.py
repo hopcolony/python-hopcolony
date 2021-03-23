@@ -57,8 +57,8 @@ class HopDriveClient:
         self.port = 443
         self.identity = project.config.identity
         self._session = requests.Session()
-        self.base_url = f"https://{self.host}:{self.port}/{self.identity}"
-        self.signer = drive_signer.Signer(self.host, project.config.project, project.config.token)
+        self.base_url = f"https://{self.host}:{self.port}"
+        self.signer = drive_signer.Signer(self.host, project.config.project, project.config.token, self.identity)
     
     def close(self):
         self._session.close()

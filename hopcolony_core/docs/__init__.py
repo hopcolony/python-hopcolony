@@ -49,28 +49,31 @@ class HopDocClient:
         self.port = 443
         self.identity = project.config.identity
         self._session = requests.Session()
-        self._base_url = f"https://{self.host}:{self.port}/{self.identity}/http"
+        self._base_url = f"https://{self.host}:{self.port}/api"
+        self.headers = {
+            "hop-identity": self.identity
+        }
     
     def close(self):
         self._session.close()
 
     def get(self, path, **kwargs):
-        resp = self._session.request("GET", self._base_url + path, **kwargs)
+        resp = self._session.request("GET", self._base_url + path, headers = self.headers, **kwargs)
         resp.raise_for_status()
         return resp
 
     def post(self, path, **kwargs):
-        resp = self._session.request("POST", self._base_url + path, **kwargs)
+        resp = self._session.request("POST", self._base_url + path, headers = self.headers, **kwargs)
         resp.raise_for_status()
         return resp
 
     def put(self, path, **kwargs):
-        resp = self._session.request("PUT", self._base_url + path, **kwargs)
+        resp = self._session.request("PUT", self._base_url + path, headers = self.headers, **kwargs)
         resp.raise_for_status()
         return resp
         
     def delete(self, path, **kwargs):
-        resp = self._session.request("DELETE", self._base_url + path, **kwargs)
+        resp = self._session.request("DELETE", self._base_url + path, headers = self.headers, **kwargs)
         resp.raise_for_status()
         return resp
 

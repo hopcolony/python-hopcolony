@@ -2,10 +2,11 @@ from datetime import datetime
 import binascii, hmac, hashlib, urllib.parse
 
 class Signer:
-    def __init__(self, host, accessKey, secretKey, region = "", algo = "AWS4-HMAC-SHA256"):
+    def __init__(self, host, accessKey, secretKey, identity, region = "", algo = "AWS4-HMAC-SHA256"):
         self.host = host
         self.accessKey = accessKey
         self.secretKey = secretKey
+        self.identity = identity
         self.region = region
         self.algo = algo
     
@@ -64,6 +65,7 @@ class Signer:
             ])
 
         headers["Authorization"] = authorization
+        headers["hop-identity"] = self.identity
 
         return SignDetails(headers, self.algo, iso8601ts, expires, f"{self.accessKey}/{rScope}", sHeaders, signature)
 
