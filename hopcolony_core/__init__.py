@@ -24,7 +24,7 @@ class HopConfig:
     def compute_identity(self):
         if not self.username or not self.project:
             return None
-        username_encoded = 'a'+base64.b64encode(self.username.encode('ascii')).decode('ascii').lower().replace("=","_")+'a'
+        username_encoded = 'a'+base64.b64encode(self.username.encode('ascii')).decode('ascii').lower().replace("=","-")+'a'
         raw = str(username_encoded) + "." + str(self.project)
         message_bytes = raw.encode('ascii')
         return base64.b64encode(message_bytes).decode('ascii')
