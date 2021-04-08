@@ -94,7 +94,25 @@ class HopAuth:
         proc.terminate()
         proc.wait()
 
-        user = HopUser.fromJson(result.payload)
+        # Update or create the user in the database
+        ref = self._docs.index(".hop.auth").document(result.payload["uuid"])
+        snapshot = ref.get()
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        snapshot = ref.update({"lastLoginTs": now}) if snapshot.success else \
+            ref.setData({
+                "registerTs": now,
+                "lastLoginTs": now,
+                "provider": result.payload["provider"],
+                "uuid": result.payload["uuid"],
+                "email": result.payload["email"],
+                "name": result.payload["name"],
+                "picture": result.payload["picture"],
+                "locale": result.payload["locale"],
+                "isAnonymous": result.payload["isAnonymous"],
+            })
+        
+        snapshot.doc.source["projects"] = result.payload["projects"]
+        user = HopUser.fromJson(snapshot.doc.source)
         return UserSnapshot(user, success=True)
     
     def register_with_email_and_password(self, email, password, locale = "es"):

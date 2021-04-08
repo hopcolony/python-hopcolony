@@ -58,8 +58,7 @@ class DocumentReference:
     def update(self, fields):
         try:
             response = self.client.post(f"/{self.index}/_doc/{self.id}/_update", json = {"doc": fields})
-            body = response.json()
-            return DocumentSnapshot(Document(None, index = self.index, id = body["_id"], version = body["_version"]), success = True)
+            return self.get()
         except requests.exceptions.HTTPError as e:
             return DocumentSnapshot(None, success = False, reason = str(e))
         
