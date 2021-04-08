@@ -13,6 +13,7 @@ class HopConfig:
     hop_dir = str(Path.home()) + "/.hop"
     hop_file = os.path.join(hop_dir, "config")
     username = None
+    namespace = None
     project = None
     token = None
     identity = None
@@ -22,16 +23,18 @@ class HopConfig:
         self.identity = self.compute_identity()
 
     def compute_identity(self):
-        if not self.username or not self.project:
+        if not (self.username or self.namespace) or not self.project:
             return None
-        username_encoded = 'a'+base64.b64encode(self.username.encode('ascii')).decode('ascii').lower().replace("=","-")+'a'
-        raw = str(username_encoded) + "." + str(self.project)
+        
+        namespace = 'a'+base64.b64encode(self.username.encode('ascii')).decode('ascii').lower().replace("=","-")+'a' \
+                if not self.namespace else self.namespace
+        raw = str(namespace) + "." + str(self.project)
         message_bytes = raw.encode('ascii')
         return base64.b64encode(message_bytes).decode('ascii')
     
     @property
     def valid(self):
-        return self.username and self.project and self.token and self.identity
+        return (self.username or self.namespace) and self.project and self.token and self.identity
     
     @classmethod
     def update(cls, **kwargs):
@@ -56,9 +59,13 @@ class HopConfig:
 
     @property
     def json(self):
-        return {"username": self.username,
-                "project": self.project,
+        data = {"project": self.project,
                 "token": self.token}
+        if self.username:
+            data["username"] = self.username
+        else:
+            data["namespace"] = self.namespace
+        return data
 
     @property
     def yaml(self):
@@ -71,16 +78,19 @@ class HopConfig:
         return self.json
 
 class Project:
-    def __init__(self, username = None, project = None, token = None, 
+    def __init__(self, username = None, project = None, token = None, namespace = None, 
                  config_file = ".hop.config"):
 
         # Use username, project and token values if the 3 provided
-        if any([username, project, token]):
+        if any([username, namespace, project, token]):
             if all([username, project, token]):
                 self.config = HopConfig(username = username, project = project, token = token)
                 return
+            elif all([namespace, project, token]):
+                self.config = HopConfig(namespace = namespace, project = project, token = token)
+                return
             else:
-                raise InvalidConfig("If you provide one of [username, project, token], you need to provide the 3 of them")
+                raise InvalidConfig("If you provide one of [username, project, token] or [namespace, project, token], you need to provide the 3 of them")
 
         # Else, use the provided config_file if provided. If not, try ~/.hop/config
         try:
