@@ -24,7 +24,7 @@ def client(project = None):
     return HopJobs(project)
 
 class HopJobs:
-    jobs_cli_token = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjFQaFFUYTVLZ2dzTlMyTzE0ZkJhazdzZ1lhOW9pc3BhSmJUZUl0c0hmUHcifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJob3AtY29yZSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJjb3JlLWpvYnMtY2xpLWFjY291bnQtdG9rZW4tcWxtYzIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiY29yZS1qb2JzLWNsaS1hY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiNjY0ZTk0ZTktMzg1Yi00NDIzLWEzODYtNjdkYmQzM2E4Mjk1Iiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmhvcC1jb3JlOmNvcmUtam9icy1jbGktYWNjb3VudCJ9.Gzl-L_S2hZqRkPTeEvW7otq2cA29pq2hPXJvHTRJxQODEmCgupRMnGN9K4mTYD6jzOhgC1e428U-pdYsL5QrYGnilwHhgwB30_mve1WfPosNKYuIcgdBWFHdsB-mS31Mpp-lgZhvRXicOs32VX1gprUbt1vKzgpR27ry6UTUYOiePLON4hpnTh65QRp3ZSNj0TEaWSlPlKLfNVv2eH5QIM4xQ1hwAA9tCx_-AKVQk-LSimlh6xXfTm0YpIj_rvHKqODmEZNIxmpqcBvZXS-PF3jPjc7JKUgKJSc89OkH-vz7tXhSWTRqmGPzfoPvWkUmAdL9V7naZ2XY5x79fvo5Qg"
+    jobs_cli_token = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjFQaFFUYTVLZ2dzTlMyTzE0ZkJhazdzZ1lhOW9pc3BhSmJUZUl0c0hmUHcifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJob3AtY29yZSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJjb3JlLWFjY291bnQtdG9rZW4tOGNudmMiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiY29yZS1hY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiYWU2NGFhNDUtZDI5YS00MDE4LWEwMzYtMzRiOGY2YTk1YjAwIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmhvcC1jb3JlOmNvcmUtYWNjb3VudCJ9.TSC-Y5u0CK8_urW9Edy5e43yjH0nwaVGR7Zdp0oDIcUTJLwnEewhXP756oWmlclfq15DC-3GDYDwInxWJJKkg-3YqpeZdAtV3BM2EVKVogbn-5TCSAQda0TJGNI2MV6x4sR6RtAaMQmnyIv5NcB0aVcZaQYlDtjsMUR7yPLBwpRqwSX3Jqwh4zV8JmtX9q5s1fW2xPPN-Ze_g6vFF67UVZSWEeb8ygOjWrs14qU1a6Gd2Gc4DVGNfFJQCixPVNSz67PEsgb9Gxxd04SsscTo17s77oaldAAb7nsyOA2HDwYioBokugcBDJNAP795vYmMbTAkVJ2cFSX4tFkCei9BrA"
     def __init__(self, project):
         self.project = project
         self.configuration = kubernetes.client.Configuration()
@@ -48,8 +48,10 @@ class HopJobs:
         with kubernetes.client.ApiClient(self.configuration) as api_client:
             api_instance = kubernetes.client.CustomObjectsApi(api_client)
         
+        # print(cfg.get_namespace())
         try:
             api_instance.create_cluster_custom_object("hopcolony.io", "v1", "hopcronjobs" if schedule else "hopjobs", yaml.load(spec, Loader=yaml.FullLoader))
         except ApiException as e:
+            print(e)
             if e.status == 409:
                 raise ResourceAlreadyExists

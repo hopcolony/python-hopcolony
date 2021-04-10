@@ -16,3 +16,11 @@ solvia:
     operacion: "COMPRA"
     tipoVivienda: 1
     idProvincia: 5
+
+example:
+  args:
+    initial_page: 2
+  pipelines:
+    - stdout
+  requirements:
+    numpy

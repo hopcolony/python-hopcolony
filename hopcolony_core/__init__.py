@@ -22,13 +22,16 @@ class HopConfig:
         self.__dict__.update(kwargs)
         self.identity = self.compute_identity()
 
+    def get_namespace(self):
+        ns = 'a'+base64.b64encode(self.username.encode('ascii')).decode('ascii').lower().replace("=","-")+'a' \
+                if not self.namespace else self.namespace
+        return str(ns)
+
     def compute_identity(self):
         if not (self.username or self.namespace) or not self.project:
             return None
         
-        namespace = 'a'+base64.b64encode(self.username.encode('ascii')).decode('ascii').lower().replace("=","-")+'a' \
-                if not self.namespace else self.namespace
-        raw = str(namespace) + "." + str(self.project)
+        raw = self.get_namespace() + "." + str(self.project)
         message_bytes = raw.encode('ascii')
         return base64.b64encode(message_bytes).decode('ascii')
     
