@@ -1,4 +1,4 @@
-import pika, multiprocessing, json, logging
+import pika, threading, json, logging
 from enum import Enum
 from dataclasses import dataclass
 
@@ -16,20 +16,31 @@ class MalformedJson(Exception):
 class OpenConnection:
     queue: str
     exchange: str
-    process: multiprocessing.Process
+    thread: threading.Thread
     connection: pika.adapters.blocking_connection.BlockingConnection
     channel: pika.adapters.blocking_connection.BlockingChannel
     consumer_tag: str
 
     def close(self):
         _logger.debug(f"[{self.consumer_tag}] Closing connection with queue ({self.queue}) and exchange ({self.exchange})")
-        self.process.terminate()
-        self.process.join()
+        self.thread.kill()
+        self.thread.join()
         self.channel.cancel()
         self.connection.close()
     
     def __str__(self):
         return f"[{self.consumer_tag}] Opened connection with queue ({self.queue}) and exchange ({self.exchange})"
+
+class ConsumerThread(threading.Thread):
+    def __init__(self, channel):
+        threading.Thread.__init__(self)
+        self.channel = channel
+  
+    def run(self):
+        self.channel.start_consuming()
+  
+    def kill(self):
+        raise SystemExit()
 
 class HopTopicQueue:
     def __init__(self, add_open_connection, parameters, exchange = "", binding = "", name = "", durable = False, exclusive = False, auto_delete = True):
@@ -61,18 +72,12 @@ class HopTopicQueue:
             on_message_callback=self.on_message_callback, 
             auto_ack=True)
 
-        process = multiprocessing.Process(target=self.consume, args=(channel,))
-        process.start()
+        thread = ConsumerThread(channel)
+        thread.daemon = True
+        thread.start()
         
-        self.add_open_connection(OpenConnection(self.name, self.exchange, process, conn, channel, consumer_tag))
-        return process
-    
-    def consume(self, channel):
-        try:
-            channel.start_consuming()
-        except KeyboardInterrupt:
-            pass
-    
+        self.add_open_connection(OpenConnection(self.name, self.exchange, thread, conn, channel, consumer_tag))
+        return thread    
     def on_message_callback(self, ch, method, props, body):
         if self.output_type == OutputType.BYTES:
             out = body
