@@ -22,7 +22,7 @@ class HopTopicExchange:
 
         if self.create:
             pika.BlockingConnection(self.parameters).channel().exchange_declare(exchange=self.name, exchange_type=self.str_type, durable=self.durable, auto_delete=self.auto_delete)
-    
+
     @property
     def str_type(self):
         if self.type == ExchangeType.DIRECT:

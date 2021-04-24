@@ -1,7 +1,8 @@
 import hopcolony_core
 from .queue import *
 from .exchange import *
-import pika, atexit, signal
+import pika, asyncio
+from signal import SIGINT, SIGTERM
 import sys, logging, threading
 
 _logger = logging.getLogger(__name__)
@@ -27,8 +28,8 @@ class HopTopicConnection:
         self.credentials = pika.PlainCredentials(self.project.config.identity, self.project.config.token)
         self.parameters = pika.ConnectionParameters(host=self.host, port=self.port, 
                     virtual_host=self.project.config.identity, credentials=self.credentials)
-
-        atexit.register(self.close)
+        
+        self.loops = {}
 
     def queue(self, name):
         return HopTopicQueue(self.add_open_connection, self.parameters, binding = name, name = name)
@@ -42,21 +43,40 @@ class HopTopicConnection:
     def add_open_connection(self, conn):
         self.open_connections.append(conn)
 
-    def signal_handler(self, signal, frame):
-        _logger.error('You pressed Ctrl+C!')
-        sys.exit(0)
+    def signal_handler(self, sig):
+        for thread, loop in self.loops.items():
+            loop.stop()
+            if thread is threading.main_thread():
+                _logger.info("Gracefully shutting down")
+                loop.remove_signal_handler(SIGTERM)
+                loop.add_signal_handler(SIGINT, lambda: None)
 
-    def spin(self):
-        signal.signal(signal.SIGINT, self.signal_handler)
-        forever = threading.Event()
-        forever.wait()
+    def spin(self, loop = None):
+        if not loop:
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError as e:
+                raise RuntimeError(f"""[ERROR] {e}.""")
 
-    def close_open_connections(self):
+        current_thread = threading.current_thread()
+        self.loops[current_thread] = loop
+
+        if current_thread is threading.main_thread():
+            # Signal handling only works for main thread
+            for sig in (SIGTERM, SIGINT):
+                loop.add_signal_handler(sig, self.signal_handler, sig)
+
+        loop.run_forever()
+
+        self.close()
+        tasks = asyncio.all_tasks(loop=loop)
+        for t in tasks:
+            t.cancel()
+        group = asyncio.gather(*tasks, return_exceptions=True)
+        loop.run_until_complete(group)
+        loop.close()
+
+    def close(self):
         for conn in self.open_connections:
             conn.close()
         self.open_connections.clear()
-
-    def close(self):
-        self.close_open_connections()
-        if hasattr(atexit, 'unregister'):
-            atexit.unregister(self.close)

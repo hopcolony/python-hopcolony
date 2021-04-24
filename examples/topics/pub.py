@@ -5,4 +5,6 @@ hopcolony_core.initialize()
 
 conn = topics.connection()
 
-conn.topic("topic-example").send("Hello")
+conn.topic("topic-cat").send("Hello")
+conn.exchange("broadcast").send("Hello")
+conn.queue("queue-test").send("Hello")
