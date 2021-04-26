@@ -78,5 +78,5 @@ class HopTopicConnection:
 
     def close(self):
         for conn in self.open_connections:
-            conn.close()
+            conn.cancel()
         self.open_connections.clear()

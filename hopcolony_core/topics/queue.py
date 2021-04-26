@@ -44,12 +44,14 @@ class HopTopicQueue:
         self.conn = AsyncioConnection(
             parameters=self.parameters,
             on_open_callback=lambda _: self.conn.channel(on_open_callback = self.on_channel_open),
-            on_open_error_callback=lambda _, __: close(),
+            on_open_error_callback=lambda _, __: cancel(),
             on_close_callback=self.on_connection_closed)
         
         self.add_open_connection(self)
+
+        return self
     
-    def close(self):
+    def cancel(self):
         self._consuming = False
         if not self.conn.is_closing and not self.conn.is_closed:
             self.stop()
@@ -89,7 +91,7 @@ class HopTopicQueue:
             conn = pika.BlockingConnection(self.parameters)
             conn.channel().queue_delete(self.queue_name)
             conn.close()
-        self.close()
+        self.cancel()
 
     def on_queue_declare_ok(self, queue):
         self.queue_name = queue.method.queue
