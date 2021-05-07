@@ -1,21 +1,29 @@
 import hopcolony_core
 from .queue import *
 from .exchange import *
-import pika, asyncio
+import pika
+import asyncio
 from signal import SIGINT, SIGTERM
-import sys, logging, threading
+import sys
+import logging
+import threading
+import inspect
 
 _logger = logging.getLogger(__name__)
 
-def connection(project = None):
+
+def connection(project=None):
     if not project:
         project = hopcolony_core.get_project()
     if not project:
-        raise hopcolony_core.ConfigNotFound("Hop Config not found. Run 'hopctl login' or place a .hop.config file here.")
+        raise hopcolony_core.ConfigNotFound(
+            "Hop Config not found. Run 'hopctl login' or place a .hop.config file here.")
     if not project.config.project:
-        raise hopcolony_core.ConfigNotFound("You have no projects yet. Create one at https://console.hopcolony.io")
-    
+        raise hopcolony_core.ConfigNotFound(
+            "You have no projects yet. Create one at https://console.hopcolony.io")
+
     return HopTopicConnection(project)
+
 
 class HopTopicConnection:
     open_connections = []
@@ -25,20 +33,55 @@ class HopTopicConnection:
 
         self.host = "topics.hopcolony.io"
         self.port = 32012
-        self.credentials = pika.PlainCredentials(self.project.config.identity, self.project.config.token)
-        self.parameters = pika.ConnectionParameters(host=self.host, port=self.port, 
-                    virtual_host=self.project.config.identity, credentials=self.credentials)
-        
+        self.credentials = pika.PlainCredentials(
+            self.project.config.identity, self.project.config.token)
+        self.parameters = pika.ConnectionParameters(host=self.host, port=self.port,
+                                                    virtual_host=self.project.config.identity, credentials=self.credentials)
+
         self.loops = {}
 
-    def queue(self, name):
-        return HopTopicQueue(self.add_open_connection, self.parameters, binding = name, name = name)
+    def queue(self, name, **kwargs):
+        queue = HopTopicQueue(self.add_open_connection,
+                              self.parameters, binding=name, name=name)
 
-    def exchange(self, name, create = False):
-        return HopTopicExchange(self.add_open_connection, self.parameters, name, create, type = ExchangeType.FANOUT)
+        # Check if it was decorated
+        lines = inspect.stack(context=2)[1].code_context
+        decorated = any(line.strip().startswith('@') for line in lines)
+        if decorated:
+            def _subscribe(cb):
+                queue.subscribe(cb, **kwargs)
+            return _subscribe
+        else:
+            return queue
+        return
 
-    def topic(self, name):     
-        return HopTopicQueue(self.add_open_connection, self.parameters, exchange = "amq.topic", binding = name)
+    def exchange(self, name, **kwargs):
+        exchange = HopTopicExchange(self.add_open_connection, self.parameters, name, create=kwargs.pop(
+            "create", None), type=ExchangeType.FANOUT)
+
+        # Check if it was decorated
+        lines = inspect.stack(context=2)[1].code_context
+        decorated = [line for line in lines if line.strip().startswith('@')]
+        if decorated:
+            def _subscribe(cb):
+                exchange.subscribe(cb, **kwargs)
+            return _subscribe
+        else:
+            return exchange
+
+    def topic(self, name, **kwargs):
+        queue = HopTopicQueue(self.add_open_connection,
+                              self.parameters, exchange="amq.topic", binding=name)
+
+        # Check if it was decorated
+        lines = inspect.stack(context=2)[1].code_context
+        decorated = any(line.strip().startswith('@') for line in lines)
+        if decorated:
+            def _subscribe(cb):
+                queue.subscribe(cb, **kwargs)
+            return _subscribe
+        else:
+            return queue
 
     def add_open_connection(self, conn):
         self.open_connections.append(conn)
@@ -51,7 +94,7 @@ class HopTopicConnection:
                 loop.remove_signal_handler(SIGTERM)
                 loop.add_signal_handler(SIGINT, lambda: None)
 
-    def spin(self, loop = None):
+    def spin(self, loop=None):
         if not loop:
             try:
                 loop = asyncio.get_event_loop()

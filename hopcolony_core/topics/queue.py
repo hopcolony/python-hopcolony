@@ -1,4 +1,10 @@
-import pika, threading, json, logging, functools, inspect, asyncio
+import pika
+import threading
+import json
+import logging
+import functools
+import inspect
+import asyncio
 from pika.adapters.asyncio_connection import AsyncioConnection
 from concurrent.futures import ThreadPoolExecutor as Executor
 from enum import Enum
@@ -6,16 +12,19 @@ from dataclasses import dataclass
 
 _logger = logging.getLogger(__name__)
 
+
 class OutputType(Enum):
     BYTES = 1
     STRING = 2
     JSON = 3
 
+
 class MalformedJson(Exception):
     pass
 
+
 class HopTopicQueue:
-    def __init__(self, add_open_connection, parameters, exchange = "", binding = "", name = "", durable = False, exclusive = False, auto_delete = True):
+    def __init__(self, add_open_connection, parameters, exchange="", binding="", name="", durable=False, exclusive=False, auto_delete=True):
         self.add_open_connection = add_open_connection
         self.parameters = parameters
         self.exchange = exchange
@@ -29,8 +38,8 @@ class HopTopicQueue:
         self._closing = False
         self._consuming = False
         self.executor = None
-    
-    def subscribe(self, callback, output_type = OutputType.STRING):
+
+    def subscribe(self, callback, output_type=OutputType.STRING):
         self.callback = callback
         self.output_type = output_type
 
@@ -43,14 +52,15 @@ class HopTopicQueue:
 
         self.conn = AsyncioConnection(
             parameters=self.parameters,
-            on_open_callback=lambda _: self.conn.channel(on_open_callback = self.on_channel_open),
+            on_open_callback=lambda _: self.conn.channel(
+                on_open_callback=self.on_channel_open),
             on_open_error_callback=lambda _, __: cancel(),
             on_close_callback=self.on_connection_closed)
-        
+
         self.add_open_connection(self)
 
         return self
-    
+
     def cancel(self):
         self._consuming = False
         if not self.conn.is_closing and not self.conn.is_closed:
@@ -59,21 +69,22 @@ class HopTopicQueue:
                 # Wait for the pending threads to finish
                 self.executor.shutdown(wait=True)
             self.conn.close()
-    
+
     def on_connection_closed(self, _, reason):
         self.channel = None
         # Maybe reconnect?
-    
+
     def stop(self):
         if not self._closing:
             self._closing = True
             if self._consuming:
                 self.stop_consuming()
-    
+
     def stop_consuming(self):
         if self.channel:
-            self.channel.basic_cancel(self._consumer_tag, callback=self.on_cancel_ok)
-    
+            self.channel.basic_cancel(
+                self._consumer_tag, callback=self.on_cancel_ok)
+
     def on_cancel_ok(self, _):
         self._consuming = False
         self.channel.close()
@@ -81,12 +92,13 @@ class HopTopicQueue:
     def on_channel_open(self, channel):
         self.channel = channel
         self.channel.add_on_close_callback(self.on_channel_closed)
-        self.channel.queue_declare(self.name, durable=self.durable, exclusive=self.exclusive, 
-            auto_delete=self.auto_delete, callback=self.on_queue_declare_ok)
-    
+        self.channel.queue_declare(self.name, durable=self.durable, exclusive=self.exclusive,
+                                   auto_delete=self.auto_delete, callback=self.on_queue_declare_ok)
+
     def on_channel_closed(self, channel, reason):
         if reason.reply_code == 404:
-            _logger.error(f"Channel for exchange \"{self.exchange}\" and queue \"{self.queue_name}\" closed due to: Exchange not found")
+            _logger.error(
+                f"Channel for exchange \"{self.exchange}\" and queue \"{self.queue_name}\" closed due to: Exchange not found")
             # Create a blocking connection to remove the unused queue
             conn = pika.BlockingConnection(self.parameters)
             conn.channel().queue_delete(self.queue_name)
@@ -96,8 +108,8 @@ class HopTopicQueue:
     def on_queue_declare_ok(self, queue):
         self.queue_name = queue.method.queue
         if self.exchange:
-            self.channel.queue_bind(queue=self.queue_name, exchange=self.exchange, 
-                routing_key=self.binding, callback=lambda _: self.start_consuming())
+            self.channel.queue_bind(queue=self.queue_name, exchange=self.exchange,
+                                    routing_key=self.binding, callback=lambda _: self.start_consuming())
         else:
             self.start_consuming()
 
@@ -121,8 +133,10 @@ class HopTopicQueue:
             try:
                 out = json.loads(body.decode('utf-8'))
             except json.decoder.JSONDecodeError as e:
-                raise MalformedJson(f"Malformed json message received on topic \"{self.binding}\": {body}") from e
-                
+                _logger.error(
+                    f"[ERROR] Malformed json message received on topic \"{method.routing_key}\": {body}")
+                return
+
         if inspect.iscoroutinefunction(self.callback):
             self.loop.create_task(self.callback(out))
         else:
@@ -136,6 +150,7 @@ class HopTopicQueue:
 
         if isinstance(body, dict):
             body = json.dumps(body)
-        
-        conn.channel().basic_publish(exchange=self.exchange, routing_key=self.binding, body=body)
+
+        conn.channel().basic_publish(exchange=self.exchange,
+                                     routing_key=self.binding, body=body)
         conn.close()

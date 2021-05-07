@@ -1,28 +1,26 @@
 import unittest
-
+from config import *
 import hopcolony_core
 from hopcolony_core import docs
 
+
 class TestDocs(unittest.TestCase):
-    user_name = "core@hopcolony.io"
-    project_name = "core"
-    token_name = "supersecret"
 
     index = ".hop.tests"
     uid = "hopcolony"
     data = {"purpose": "Test Hop Docs!"}
 
     def setUp(self):
-        self.project = hopcolony_core.initialize(username = self.user_name, project = self.project_name, 
-                                             token = self.token_name)
+        self.project = hopcolony_core.initialize(username=user_name, project=project_name,
+                                                 token=token)
         self.db = docs.client()
-    
+
     def tearDown(self):
         self.db.close()
 
     def test_a_initialize(self):
         self.assertNotEqual(self.project.config, None)
-        self.assertEqual(self.project.name, self.project_name)
+        self.assertEqual(self.project.name, project_name)
 
         self.assertEqual(self.db.project.name, self.project.name)
         self.assertEqual(self.db.client.host, "docs.hopcolony.io")
@@ -33,7 +31,8 @@ class TestDocs(unittest.TestCase):
         self.assertNotEqual(status["status"], "red")
 
     def test_c_create_document(self):
-        snapshot = self.db.index(self.index).document(self.uid).setData(self.data)
+        snapshot = self.db.index(self.index).document(
+            self.uid).setData(self.data)
         self.assertTrue(snapshot.success)
         doc = snapshot.doc
         self.assertEqual(doc.index, self.index)
@@ -56,7 +55,8 @@ class TestDocs(unittest.TestCase):
         snapshot = self.db.index(self.index).document(self.uid).get()
         self.assertFalse(snapshot.success)
 
-        snapshot = self.db.index(self.index).document(self.uid).update({"data": "test"})
+        snapshot = self.db.index(self.index).document(
+            self.uid).update({"data": "test"})
         self.assertFalse(snapshot.success)
 
         snapshot = self.db.index(self.index).document(self.uid).delete()
@@ -82,6 +82,7 @@ class TestDocs(unittest.TestCase):
     def test_i_index_not_there(self):
         result = self.db.get()
         self.assertNotIn(self.index, [index.name for index in result])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -4,6 +4,7 @@ from datetime import datetime
 import uuid
 from dataclasses import dataclass
 
+
 @dataclass
 class Bucket:
     printable_headers = ["Name", "Number of Objects", "Creation Date"]
@@ -20,6 +21,7 @@ class Bucket:
     def printable(self):
         return [self.name, self.num_objs, self.creation_date]
 
+
 class BucketReference:
     def __init__(self, client, bucket):
         self.client = client
@@ -33,10 +35,10 @@ class BucketReference:
             for s in soup.find_all("contents"):
                 url = self.object(s.find("key").text).get_presigned()
                 objects.append(Object.fromSoup(url, s))
-            return BucketSnapshot(objects, success = True)
+            return BucketSnapshot(objects, success=True)
         except requests.exceptions.HTTPError:
-            return BucketSnapshot(None, success = False)
-    
+            return BucketSnapshot(None, success=False)
+
     @property
     def exists(self):
         try:
@@ -47,7 +49,7 @@ class BucketReference:
 
     def create(self):
         try:
-            self.client.put(f"/{self.bucket}", bodyBytes = b"")
+            self.client.put(f"/{self.bucket}", bodyBytes=b"")
             return True
         except requests.exceptions.HTTPError:
             return False
@@ -77,7 +79,8 @@ class BucketReference:
         except requests.exceptions.HTTPError as e:
             return False
 
+
 class BucketSnapshot:
-    def __init__(self, objects, success = False):
+    def __init__(self, objects, success=False):
         self.objects = objects
         self.success = success
