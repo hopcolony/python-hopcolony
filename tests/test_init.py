@@ -1,26 +1,23 @@
-import unittest
-from config import *
-import hopcolony_core
+import pytest
+from .config import *
+import hopcolony
 
 
-class TestInitialize(unittest.TestCase):
+class TestInitialize(object):
 
     def test_initialize(self):
-        with self.assertRaises(hopcolony_core.ConfigNotFound):
-            hopcolony_core.initialize(config_file="..")
+        with pytest.raises(hopcolony.ConfigNotFound):
+            hopcolony.initialize(config_file="..")
 
-        with self.assertRaises(hopcolony_core.InvalidConfig):
-            hopcolony_core.initialize(username=user_name)
+        with pytest.raises(hopcolony.InvalidConfig):
+            hopcolony.initialize(username=user_name)
 
-        with self.assertRaises(hopcolony_core.InvalidConfig):
-            hopcolony_core.initialize(username=user_name, project=project_name)
+        with pytest.raises(hopcolony.InvalidConfig):
+            hopcolony.initialize(username=user_name, project=project_name)
 
-        project = hopcolony_core.initialize(username=user_name, project=project_name,
-                                            token=token)
-        self.assertEqual(project.config.username, user_name)
-        self.assertEqual(project.config.project, project_name)
-        self.assertEqual(project.config.token, token)
+        project = hopcolony.initialize(username=user_name, project=project_name,
+                                                token=token)
 
-
-if __name__ == '__main__':
-    unittest.main()
+        assert project.config.username == user_name
+        assert project.config.project == project_name
+        assert project.config.token == token

@@ -1,4 +1,4 @@
-from hopcolony_core import jobs
+from hopcolony import jobs
 import time, re, json
 from selenium.webdriver import ActionChains
 

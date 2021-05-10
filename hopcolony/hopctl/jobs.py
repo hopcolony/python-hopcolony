@@ -9,11 +9,11 @@ import click_spinner
 import requests
 import time
 from typing import Optional
-import hopcolony_core
-from hopcolony_core import jobs
+import hopcolony
+from hopcolony import jobs
 
 app = typer.Typer()
-cfg = hopcolony_core.config()
+cfg = hopcolony.config()
 
 
 @app.command()
@@ -46,7 +46,7 @@ class Pipeline:
         self.cls = None
 
         # Find the pipeline cls
-        modules = sys.modules[__name__ if is_custom else "hopcolony_core.jobs"]
+        modules = sys.modules[__name__ if is_custom else "hopcolony.jobs"]
         for _, obj in inspect.getmembers(modules):
             if inspect.isclass(obj) and issubclass(obj, jobs.JobPipeline) and obj.name == name:
                 self.cls = obj

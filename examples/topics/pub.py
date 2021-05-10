@@ -1,7 +1,7 @@
-import hopcolony_core
-from hopcolony_core import topics
+import hopcolony
+from hopcolony import topics
 
-hopcolony_core.initialize()
+hopcolony.initialize()
 
 conn = topics.connection()
 

@@ -1,8 +1,8 @@
 import typer
 from tabulate import tabulate
-import hopcolony_core
+import hopcolony
 
-from hopcolony_core import auth, docs, drive
+from hopcolony import auth, docs, drive
 
 app = typer.Typer()
 
@@ -11,7 +11,7 @@ app = typer.Typer()
 def user():
     try:
         client = auth.client()
-    except hopcolony_core.ConfigNotFound as e:
+    except hopcolony.ConfigNotFound as e:
         typer.secho(str(e), err=True, fg=typer.colors.RED)
         raise typer.Exit(code=1)
     users = client.get()
@@ -24,7 +24,7 @@ def user():
 def index():
     try:
         client = docs.client()
-    except hopcolony_core.ConfigNotFound as e:
+    except hopcolony.ConfigNotFound as e:
         typer.secho(str(e), err=True, fg=typer.colors.RED)
         raise typer.Exit(code=1)
     indices = client.get()
@@ -37,7 +37,7 @@ def index():
 def bucket():
     try:
         client = drive.client()
-    except hopcolony_core.ConfigNotFound as e:
+    except hopcolony.ConfigNotFound as e:
         typer.secho(str(e), err=True, fg=typer.colors.RED)
         raise typer.Exit(code=1)
     buckets = client.get()

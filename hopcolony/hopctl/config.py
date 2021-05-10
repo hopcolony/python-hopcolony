@@ -1,10 +1,10 @@
 import typer
 import yaml
 from typing import Optional
-import hopcolony_core
+import hopcolony
 
 app = typer.Typer()
-cfg = hopcolony_core.config()
+cfg = hopcolony.config()
 
 
 def echo(json):
@@ -52,7 +52,7 @@ def set(username: Optional[str] = None, project: Optional[str] = None,
 
     if file:
         try:
-            config = hopcolony_core.HopConfig.fromFile(file)
+            config = hopcolony.HopConfig.fromFile(file)
             commit(config)
             raise typer.Exit()
         except FileNotFoundError:
@@ -60,7 +60,7 @@ def set(username: Optional[str] = None, project: Optional[str] = None,
                 f"Could not find the file {file}", err=True, fg=typer.colors.RED)
             raise typer.Exit(code=1)
 
-    config = hopcolony_core.HopConfig.update(
+    config = hopcolony.HopConfig.update(
         username=username, project=project, token=token)
     commit(config)
     raise typer.Exit()

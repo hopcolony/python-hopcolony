@@ -1,7 +1,7 @@
 from os import path
 from setuptools import setup, find_packages
 
-about_path = path.join(path.dirname(path.abspath(__file__)), 'hopcolony_core', '__about__.py')
+about_path = path.join(path.dirname(path.abspath(__file__)), 'hopcolony', '__about__.py')
 about = {}
 with open(about_path) as fp:
     exec(fp.read(), about)
@@ -9,7 +9,7 @@ with open(about_path) as fp:
 setup(
     name=about['__title__'],
     version=about['__version__'],
-    description='HopColony Core Python SDK',
+    description='Hopcolony Python SDK',
     long_description='HopColony SDK to communicate with backend for Python developers',
     url=about['__url__'],
     author=about['__author__'],
@@ -35,7 +35,7 @@ setup(
     python_requires='>=3.5',
     entry_points={
         "console_scripts": [
-            "hopctl=hopcolony_core.__main__:main",
+            "hopctl=hopcolony.__main__:main",
         ]
     },
     classifiers=[

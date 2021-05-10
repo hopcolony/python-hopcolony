@@ -2,9 +2,9 @@ import typer
 import yaml
 from typing import Optional
 from tabulate import tabulate
-import hopcolony_core
+import hopcolony
 
-from hopcolony_core import auth, docs, drive
+from hopcolony import auth, docs, drive
 
 app = typer.Typer()
 
@@ -13,7 +13,7 @@ app = typer.Typer()
 def user(uuid: str):
     try:
         client = auth.client()
-    except hopcolony_core.ConfigNotFound as e:
+    except hopcolony.ConfigNotFound as e:
         typer.secho(str(e), err=True, fg=typer.colors.RED)
         raise typer.Exit(code=1)
     snapshot = client.user(uuid).get()
@@ -27,7 +27,7 @@ def user(uuid: str):
 def index(name: str, cols: str = None, doc: Optional[str] = None):
     try:
         client = docs.client()
-    except hopcolony_core.ConfigNotFound as e:
+    except hopcolony.ConfigNotFound as e:
         typer.secho(str(e), err=True, fg=typer.colors.RED)
         raise typer.Exit(code=1)
     if not doc:
@@ -54,7 +54,7 @@ def index(name: str, cols: str = None, doc: Optional[str] = None):
 def bucket(name: str, obj: Optional[str] = None):
     try:
         client = drive.client()
-    except hopcolony_core.ConfigNotFound as e:
+    except hopcolony.ConfigNotFound as e:
         typer.secho(str(e), err=True, fg=typer.colors.RED)
         raise typer.Exit(code=1)
     if not obj:
@@ -86,7 +86,7 @@ def bucket(name: str, obj: Optional[str] = None):
 def doc(uuid: str):
     try:
         client = docs.client()
-    except hopcolony_core.ConfigNotFound as e:
+    except hopcolony.ConfigNotFound as e:
         typer.secho(str(e), err=True, fg=typer.colors.RED)
         raise typer.Exit(code=1)
     snapshot = client.index(name).document(uuid).get()

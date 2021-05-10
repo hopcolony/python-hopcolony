@@ -18,7 +18,7 @@ example:
 
 """
 
-example_pipeline = """from hopcolony_core import jobs
+example_pipeline = """from hopcolony import jobs
 
 class ToJsonPipeline(jobs.JobPipeline):
     name = "to-json"
@@ -26,7 +26,7 @@ class ToJsonPipeline(jobs.JobPipeline):
     def process_item(self, item, job):
         return {"project": self.project, "data": item}"""
 
-example_job = """from hopcolony_core import jobs
+example_job = """from hopcolony import jobs
 
 class ExampleJob(jobs.Job):
     name = "example"

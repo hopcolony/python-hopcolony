@@ -1,10 +1,10 @@
-import hopcolony_core
-from hopcolony_core import topics
+import hopcolony
+from hopcolony import topics
 import time
 import threading
 import asyncio
 
-hopcolony_core.initialize()
+hopcolony.initialize()
 
 conn = topics.connection()
 threading.Thread(target=lambda: topics.connection())

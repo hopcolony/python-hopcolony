@@ -1,5 +1,5 @@
-import hopcolony_core
-from hopcolony_core import docs
+import hopcolony
+from hopcolony import docs
 
 
 class JobPipeline:
@@ -25,7 +25,7 @@ class HopDocs(JobPipeline):
 
     def __init__(self, *args, **kwargs):
         super(HopDocs, self).__init__(*args, **kwargs)
-        hopcolony_core.initialize()
+        hopcolony.initialize()
         self.db = docs.client()
 
     def process_item(self, item, job):

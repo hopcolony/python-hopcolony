@@ -1,95 +1,100 @@
-import unittest
+import pytest
 import os
 import requests
-from config import *
-import hopcolony_core
-from hopcolony_core import drive
+from .config import *
+import hopcolony
+from hopcolony import drive
+
+obj = "test"
 
 
-class TestDrive(unittest.TestCase):
+@pytest.fixture
+def project():
+    return hopcolony.initialize(username=user_name, project=project_name,
+                                     token=token)
+
+
+@pytest.fixture
+def db():
+    return drive.client()
+
+
+@pytest.fixture
+def img():
+    return drive.load_image(os.path.join(
+        os.path.dirname(__file__), "resources", obj))
+
+
+class TestDrive(object):
 
     bucket = "hop-test"
     obj = "test"
 
-    def setUp(self):
-        self.project = hopcolony_core.initialize(username=user_name, project=project_name,
-                                                 token=token)
-        self.db = drive.client()
-        self.img = drive.load_image(os.path.join(
-            os.path.dirname(__file__), "resources", self.obj))
+    def test_a_initialize(self, project, db):
+        assert project.config != None
+        assert project.name == project_name
 
-    def tearDown(self):
-        self.db.close()
-
-    def test_a_initialize(self):
-        self.assertNotEqual(self.project.config, None)
-        self.assertEqual(self.project.name, project_name)
-
-        self.assertEqual(self.db.project.name, self.project.name)
-        self.assertEqual(self.db.client.host, "drive.hopcolony.io")
-        self.assertEqual(self.db.client.identity, self.project.config.identity)
+        assert db.project.name == project.name
+        assert db.client.host == "drive.hopcolony.io"
+        assert db.client.identity == project.config.identity
 
     def test_b_load_image(self):
-        with self.assertRaises(FileNotFoundError):
+        with pytest.raises(FileNotFoundError):
             drive.load_image("whatever")
 
-    def test_c_get_non_existing_bucket(self):
-        snapshot = self.db.bucket("whatever").get()
-        self.assertFalse(snapshot.success)
+    def test_c_get_non_existing_bucket(self, db):
+        snapshot = db.bucket("whatever").get()
+        assert snapshot.success == False
 
-    def test_d_create_bucket(self):
-        success = self.db.bucket(self.bucket).create()
-        self.assertTrue(success)
+    def test_d_create_bucket(self, db):
+        success = db.bucket(self.bucket).create()
+        assert success == True
 
-    def test_e_get_existing_bucket(self):
-        snapshot = self.db.bucket(self.bucket).get()
-        self.assertTrue(snapshot.success)
+    def test_e_get_existing_bucket(self, db):
+        snapshot = db.bucket(self.bucket).get()
+        assert snapshot.success == True
 
-    def test_f_list_buckets(self):
-        buckets = self.db.get()
-        self.assertIn(self.bucket, [bucket.name for bucket in buckets])
+    def test_f_list_buckets(self, db):
+        buckets = db.get()
+        assert self.bucket in [bucket.name for bucket in buckets]
 
-    def test_g_delete_bucket(self):
-        result = self.db.bucket(self.bucket).delete()
-        self.assertTrue(result)
+    def test_g_delete_bucket(self, db):
+        result = db.bucket(self.bucket).delete()
+        assert result == True
 
-    def test_h_delete_non_existing_bucket(self):
-        result = self.db.bucket(self.bucket).delete()
-        self.assertTrue(result)
+    def test_h_delete_non_existing_bucket(self, db):
+        result = db.bucket(self.bucket).delete()
+        assert result == True
 
-    def test_i_create_object(self):
-        snapshot = self.db.bucket(self.bucket).object(self.obj).put(self.img)
-        self.assertTrue(snapshot.success)
+    def test_i_create_object(self, db, img):
+        snapshot = db.bucket(self.bucket).object(obj).put(img)
+        assert snapshot.success == True
 
-    def test_j_find_object(self):
-        snapshot = self.db.bucket(self.bucket).get()
-        self.assertTrue(snapshot.success)
-        self.assertIn(self.obj, [obj.id for obj in snapshot.objects])
+    def test_j_find_object(self, db):
+        snapshot = db.bucket(self.bucket).get()
+        assert snapshot.success == True
+        assert obj in [obj.id for obj in snapshot.objects]
 
-    def test_k_get_object(self):
-        snapshot = self.db.bucket(self.bucket).object(self.obj).get()
-        self.assertTrue(snapshot.success)
-        self.assertEqual(self.obj, snapshot.object.id)
-        self.assertEqual(self.img, snapshot.object.data)
+    def test_k_get_object(self, db, img):
+        snapshot = db.bucket(self.bucket).object(obj).get()
+        assert snapshot.success == True
+        assert obj == snapshot.object.id
+        assert img == snapshot.object.data
 
-    def test_l_get_presigned_object(self):
-        url = self.db.bucket(self.bucket).object(self.obj).get_presigned()
+    def test_l_get_presigned_object(self, db, img):
+        url = db.bucket(self.bucket).object(obj).get_presigned()
         response = requests.get(url)
-        self.assertEqual(self.img, response.content)
+        assert response.content == img
 
-    def test_m_delete_object(self):
-        result = self.db.bucket(self.bucket).object(self.obj).delete()
-        self.assertTrue(result)
+    def test_m_delete_object(self, db):
+        result = db.bucket(self.bucket).object(obj).delete()
+        assert result == True
 
-    def test_n_add_object(self):
-        snapshot = self.db.bucket(self.bucket).add(self.img)
-        self.assertTrue(snapshot.success)
-        self.assertNotEqual(snapshot.object.id, None)
+    def test_n_add_object(self, db, img):
+        snapshot = db.bucket(self.bucket).add(img)
+        assert snapshot.success == True
+        assert snapshot.object.id != None
 
-    def test_o_delete_bucket(self):
-        result = self.db.bucket(self.bucket).delete()
-        self.assertTrue(result)
-
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_o_delete_bucket(self, db):
+        result = db.bucket(self.bucket).delete()
+        assert result == True

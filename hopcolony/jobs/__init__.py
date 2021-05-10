@@ -1,4 +1,4 @@
-import hopcolony_core
+import hopcolony
 from .jobs import *
 from .jobs_pipelines import *
 from .utils import *
@@ -18,12 +18,12 @@ class ResourceAlreadyExists(Exception):
 
 def client(project=None):
     if not project:
-        project = hopcolony_core.get_project()
+        project = hopcolony.get_project()
     if not project:
-        raise hopcolony_core.ConfigNotFound(
+        raise hopcolony.ConfigNotFound(
             "Hop Config not found. Run 'hopctl login' or place a .hop.config file here.")
     if not project.config.project:
-        raise hopcolony_core.ConfigNotFound(
+        raise hopcolony.ConfigNotFound(
             "You have no projects yet. Create one at https://console.hopcolony.io")
 
     return HopJobs(project)
@@ -46,7 +46,7 @@ class HopJobs:
         self.engine.start()
 
     def deploy(self, name, job, pipelines="", settings={}, schedule=None):
-        cfg = hopcolony_core.config()
+        cfg = hopcolony.config()
         spec = job_spec.format(kind="HopCronJob" if schedule else "HopJob",
                                metadata_name=f"{cfg.project}-{name}" if schedule else f"{cfg.project}-job-{name}-{str(time.time()).replace('.', '')}",
                                name=name, schedule=f"schedule: '{schedule}'" if schedule else "",

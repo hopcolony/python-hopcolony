@@ -1,88 +1,86 @@
-import unittest
-from config import *
-import hopcolony_core
-from hopcolony_core import docs
+import pytest
+from .config import *
+import hopcolony
+from hopcolony import docs
 
 
-class TestDocs(unittest.TestCase):
+@pytest.fixture
+def project():
+    return hopcolony.initialize(username=user_name, project=project_name,
+                                     token=token)
+
+
+@pytest.fixture
+def db():
+    return docs.client()
+
+
+class TestDocs(object):
 
     index = ".hop.tests"
     uid = "hopcolony"
     data = {"purpose": "Test Hop Docs!"}
 
-    def setUp(self):
-        self.project = hopcolony_core.initialize(username=user_name, project=project_name,
-                                                 token=token)
-        self.db = docs.client()
+    def test_a_initialize(self, project, db):
+        assert project.config != None
+        assert project.name == project_name
 
-    def tearDown(self):
-        self.db.close()
+        assert db.project.name == project.name
+        assert db.client.host == "docs.hopcolony.io"
+        assert db.client.identity == project.config.identity
 
-    def test_a_initialize(self):
-        self.assertNotEqual(self.project.config, None)
-        self.assertEqual(self.project.name, project_name)
+    def test_b_status(self, db):
+        status = db.status
+        assert status["status"] != "red"
 
-        self.assertEqual(self.db.project.name, self.project.name)
-        self.assertEqual(self.db.client.host, "docs.hopcolony.io")
-        self.assertEqual(self.db.client.identity, self.project.config.identity)
-
-    def test_b_status(self):
-        status = self.db.status
-        self.assertNotEqual(status["status"], "red")
-
-    def test_c_create_document(self):
-        snapshot = self.db.index(self.index).document(
-            self.uid).setData(self.data)
-        self.assertTrue(snapshot.success)
+    def test_c_create_document(self, db):
+        snapshot = db.index(self.index).document(self.uid).setData(self.data)
+        assert snapshot.success == True
         doc = snapshot.doc
-        self.assertEqual(doc.index, self.index)
-        self.assertEqual(doc.id, self.uid)
-        self.assertEqual(doc.source, self.data)
+        assert doc.index == self.index
+        assert doc.id == self.uid
+        assert doc.source == self.data
 
-    def test_d_get_document(self):
-        snapshot = self.db.index(self.index).document(self.uid).get()
-        self.assertTrue(snapshot.success)
+    def test_d_get_document(self, db):
+        snapshot = db.index(self.index).document(self.uid).get()
+        assert snapshot.success == True
         doc = snapshot.doc
-        self.assertEqual(doc.index, self.index)
-        self.assertEqual(doc.id, self.uid)
-        self.assertEqual(doc.source, self.data)
+        assert doc.index == self.index
+        assert doc.id == self.uid
+        assert doc.source == self.data
 
-    def test_e_delete_document(self):
-        snapshot = self.db.index(self.index).document(self.uid).delete()
-        self.assertTrue(snapshot.success)
+    def test_e_delete_document(self, db):
+        snapshot = db.index(self.index).document(self.uid).delete()
+        assert snapshot.success == True
 
-    def test_f_find_non_existing(self):
-        snapshot = self.db.index(self.index).document(self.uid).get()
-        self.assertFalse(snapshot.success)
+    def test_f_find_non_existing(self, db):
+        snapshot = db.index(self.index).document(self.uid).get()
+        assert snapshot.success == False
 
-        snapshot = self.db.index(self.index).document(
+        snapshot = db.index(self.index).document(
             self.uid).update({"data": "test"})
-        self.assertFalse(snapshot.success)
+        assert snapshot.success == False
 
-        snapshot = self.db.index(self.index).document(self.uid).delete()
-        self.assertFalse(snapshot.success)
+        snapshot = db.index(self.index).document(self.uid).delete()
+        assert snapshot.success == False
 
-        snapshot = self.db.index(".does.not.exist").get()
-        self.assertFalse(snapshot.success)
+        snapshot = db.index(".does.not.exist").get()
+        assert snapshot.success == False
 
-    def test_g_create_document_without_id(self):
-        snapshot = self.db.index(self.index).add(self.data)
-        self.assertTrue(snapshot.success)
+    def test_g_create_document_without_id(self, db):
+        snapshot = db.index(self.index).add(self.data)
+        assert snapshot.success == True
         doc = snapshot.doc
-        self.assertEqual(doc.index, self.index)
-        self.assertEqual(doc.source, self.data)
+        assert doc.index == self.index
+        assert doc.source == self.data
 
-        snapshot = self.db.index(self.index).document(doc.id).delete()
-        self.assertTrue(snapshot.success)
+        snapshot = db.index(self.index).document(doc.id).delete()
+        assert snapshot.success == True
 
-    def test_h_delete_index(self):
-        result = self.db.index(self.index).delete()
-        self.assertTrue(result)
+    def test_h_delete_index(self, db):
+        result = db.index(self.index).delete()
+        assert result == True
 
-    def test_i_index_not_there(self):
-        result = self.db.get()
-        self.assertNotIn(self.index, [index.name for index in result])
-
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_i_index_not_there(self, db):
+        result = db.get()
+        assert self.index not in [index.name for index in result]

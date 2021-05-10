@@ -1,6 +1,6 @@
-import hopcolony_core
-import hopcolony_core.docs as docs
-import hopcolony_core.topics as topics
+import hopcolony
+import hopcolony.docs as docs
+import hopcolony.topics as topics
 
 from .auth_user import *
 from .auth_token import *
@@ -18,12 +18,12 @@ import subprocess
 
 def client(project=None):
     if not project:
-        project = hopcolony_core.get_project()
+        project = hopcolony.get_project()
     if not project:
-        raise hopcolony_core.ConfigNotFound(
+        raise hopcolony.ConfigNotFound(
             "Hop Config not found. Run 'hopctl login' or place a .hop.config file here.")
     if not project.config.project:
-        raise hopcolony_core.ConfigNotFound(
+        raise hopcolony.ConfigNotFound(
             "You have no projects yet. Create one at https://console.hopcolony.io")
 
     return HopAuth(project)
@@ -58,7 +58,7 @@ class HopAuth:
         snapshot = self._docs.index(".hop.projects").where(
             "uuid", isEqualTo=user.uuid).where("name", isEqualTo=project).get()
         if snapshot.success and len(snapshot.docs):
-            return hopcolony_core.HopConfig(username=user.email, project=project, token=snapshot.docs[0].source["token"])
+            return hopcolony.HopConfig(username=user.email, project=project, token=snapshot.docs[0].source["token"])
         else:
             return None
 

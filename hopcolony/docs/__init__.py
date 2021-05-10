@@ -1,4 +1,4 @@
-import hopcolony_core
+import hopcolony
 from .docs_index import *
 from .docs_document import *
 
@@ -8,12 +8,12 @@ import re
 
 def client(project=None):
     if not project:
-        project = hopcolony_core.get_project()
+        project = hopcolony.get_project()
     if not project:
-        raise hopcolony_core.ConfigNotFound(
+        raise hopcolony.ConfigNotFound(
             "Hop Config not found. Run 'hopctl login' or place a .hop.config file here.")
     if not project.config.project:
-        raise hopcolony_core.ConfigNotFound(
+        raise hopcolony.ConfigNotFound(
             "You have no projects yet. Create one at https://console.hopcolony.io")
 
     return HopDoc(project)

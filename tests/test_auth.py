@@ -1,53 +1,52 @@
-import unittest
+import pytest
 import time
-from config import *
-import hopcolony_core
-from hopcolony_core import auth
+from .config import *
+import hopcolony
+from hopcolony import auth
 
 
-class TestAuth(unittest.TestCase):
+@pytest.fixture
+def project():
+    return hopcolony.initialize(username=user_name, project=project_name,
+                                     token=token)
+
+
+@pytest.fixture
+def db():
+    return auth.client()
+
+
+class TestAuth(object):
 
     email = "lpaarup@hopcolony.io"
     password = "secret"
     uid = "faad1898-1796-55ca-aa3d-5eec87f8655e"
 
-    def setUp(self):
-        self.project = hopcolony_core.initialize(username=user_name, project=project_name,
-                                                 token=token)
-        self.db = auth.client()
+    def test_a_initialize(self, project, db):
+        assert project.config != None
+        assert project.name == project_name
+        assert db.project.name == project.name
 
-    def tearDown(self):
-        self.db.close()
-
-    def test_a_initialize(self):
-        self.assertNotEqual(self.project.config, None)
-        self.assertEqual(self.project.name, project_name)
-        self.assertEqual(self.db.project.name, self.project.name)
-
-    def test_b_register_with_username_and_password(self):
-        result = self.db.register_with_email_and_password(
+    def test_b_register_with_username_and_password(self, db):
+        result = db.register_with_email_and_password(
             self.email, self.password)
-        self.assertTrue(result.success)
+        result.success == True
         user = result.user
-        self.assertEqual(user.provider, "email")
-        self.assertEqual(user.email, self.email)
-        self.assertEqual(user.password, self.password)
-        self.assertNotEqual(user.uuid, None)
+        assert user.provider == "email"
+        assert user.email == self.email
+        assert user.password == self.password
+        assert user.uuid != None
 
-    def test_c_register_duplicated(self):
-        with self.assertRaises(auth.DuplicatedEmail):
-            result = self.db.register_with_email_and_password(
+    def test_c_register_duplicated(self, db):
+        with pytest.raises(auth.DuplicatedEmail):
+            result = db.register_with_email_and_password(
                 self.email, self.password)
 
-    def test_d_list_users(self):
+    def test_d_list_users(self, db):
         # It takes some time to index the previous addition
-        time.sleep(2)
-        users = self.db.get()
-        self.assertIn(self.email, [user.email for user in users])
+        time.sleep(1)
+        users = db.get()
+        assert self.email in [user.email for user in users]
 
-    def test_e_delete_user(self):
-        result = self.db.delete(self.uid)
-
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_e_delete_user(self, db):
+        result = db.delete(self.uid)

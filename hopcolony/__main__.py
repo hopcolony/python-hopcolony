@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
-import hopcolony_core
-from hopcolony_core import auth
+import hopcolony
+from hopcolony import auth
 import typer, yaml
 
 app = typer.Typer()
 
 @app.command()
 def login():
-    hopcolony_core.initialize(username="core@hopcolony.io", project="core", token="supersecret")
+    hopcolony.initialize(username="core@hopcolony.io", project="core", token="supersecret")
     client = auth.client()
     auth_result = client.sign_in_with_hopcolony(scopes=["projects"])
     if auth_result.success:
         if not auth_result.user.projects:
-            hopcolony_core.HopConfig(username=auth_result.user.email).commit()
+            hopcolony.HopConfig(username=auth_result.user.email).commit()
             typer.secho("You have no projects yet. Create one at https://console.hopcolony.io", fg = typer.colors.YELLOW)
         else:
             typer.echo(f"Welcome {auth_result.user.name}! Please, select the project:")
@@ -28,8 +28,8 @@ def login():
 
 def load():
     try:
-        hopcolony_core.initialize()
-    except hopcolony_core.ConfigNotFound as e:
+        hopcolony.initialize()
+    except hopcolony.ConfigNotFound as e:
         pass
     except yaml.scanner.ScannerError as e:
         typer.secho("Check the format of your settings file", err = True, fg = typer.colors.RED)
@@ -38,7 +38,7 @@ def load():
 def main():
     load()
     # Import here so that the config is loaded when the modules come up
-    from hopcolony_core.hopctl import config, jobs, get, describe
+    from hopcolony.hopctl import config, jobs, get, describe
     app.add_typer(config.app, name="config")
     app.add_typer(jobs.app, name="jobs")
     app.add_typer(get.app, name="get")
