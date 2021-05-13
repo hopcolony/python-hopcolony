@@ -82,19 +82,5 @@ def bucket(name: str, obj: Optional[str] = None):
                 f"Object \"{obj}\" not found in index {name}", fg=typer.colors.RED)
 
 
-@app.command()
-def doc(uuid: str):
-    try:
-        client = docs.client()
-    except hopcolony.ConfigNotFound as e:
-        typer.secho(str(e), err=True, fg=typer.colors.RED)
-        raise typer.Exit(code=1)
-    snapshot = client.index(name).document(uuid).get()
-    if snapshot.success:
-        typer.echo(yaml.dump(snapshot.doc.source))
-    else:
-        typer.secho(f"Document \"{uuid}\" not found", fg=typer.colors.RED)
-
-
 if __name__ == "__main__":
     app()
