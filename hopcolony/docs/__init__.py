@@ -56,29 +56,29 @@ class HopDocClient:
         self.identity = project.config.identity
         self._session = requests.Session()
         self._base_url = f"https://{self.host}:{self.port}/{self.identity}/api"
+        self._headers = {
+            "Token": self.project.config.token
+        }
 
     def close(self):
         self._session.close()
 
     def get(self, path, **kwargs):
-        resp = self._session.request("GET", self._base_url + path, **kwargs)
+        resp = self._session.request("GET", self._base_url + path, headers=self._headers, **kwargs)
         resp.raise_for_status()
         return resp
 
     def post(self, path, **kwargs):
-        resp = self._session.request("POST", self._base_url + path, **kwargs)
+        resp = self._session.request("POST", self._base_url + path, headers=self._headers, **kwargs)
         resp.raise_for_status()
         return resp
 
     def put(self, path, **kwargs):
-        resp = self._session.request("PUT", self._base_url + path, **kwargs)
+        resp = self._session.request("PUT", self._base_url + path, headers=self._headers, **kwargs)
         resp.raise_for_status()
         return resp
 
     def delete(self, path, **kwargs):
-        resp = self._session.request("DELETE", self._base_url + path, **kwargs)
+        resp = self._session.request("DELETE", self._base_url + path, headers=self._headers, **kwargs)
         resp.raise_for_status()
         return resp
-
-    # Future<WebSocket> connect(String path) async =>
-    #     WebSocket.connect("wss://$host/ws$path")
