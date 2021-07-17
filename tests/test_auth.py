@@ -30,7 +30,7 @@ class TestAuth(object):
     def test_b_register_with_username_and_password(self, db):
         result = db.register_with_email_and_password(
             self.email, self.password)
-        result.success == True
+        assert result.success == True
         user = result.user
         assert user.provider == "email"
         assert user.email == self.email
